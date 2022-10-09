@@ -34,7 +34,8 @@ class Order(PKMixin):
                 self.total_amount = self.total_amount - self.discount.amount
             else:
                 self.total_amount = self.total_amount * (1 - self.discount.amount/100)
-        return self.total_amount.quantize(Decimal('.01'))
+        total = self.total_amount.quantize(Decimal('.01'))
+        return total if total > 0 else 0
 
 
 class Discount(PKMixin):
