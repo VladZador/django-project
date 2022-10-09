@@ -1,8 +1,10 @@
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth import get_user_model
 
-from mystore.mystore.mixins.model_mixins import PKMixin
-from mystore.items.models import Product
+from mystore.mixins.model_mixins import PKMixin
+from items.models import Product
 
 
 class Order(PKMixin):
@@ -32,7 +34,7 @@ class Order(PKMixin):
                 self.total_amount = self.total_amount - self.discount.amount
             else:
                 self.total_amount = self.total_amount * (1 - self.discount.amount/100)
-        return self.total_amount if self.total_amount > 0 else 0
+        return self.total_amount.quantize(Decimal('.01'))
 
 
 class Discount(PKMixin):

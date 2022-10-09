@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from mystore.mystore.mixins.model_mixins import PKMixin
+from mystore.mixins.model_mixins import PKMixin
 
 
 def upload_image(instance, filename):
@@ -15,7 +15,7 @@ def upload_image(instance, filename):
 
 class Item(PKMixin):
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True)
     image = models.ImageField(upload_to=upload_image)
     category = models.ForeignKey("Category", on_delete=models.CASCADE)
 
@@ -25,7 +25,7 @@ class Item(PKMixin):
 
 class Category(PKMixin):
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True)
     image = models.ImageField(upload_to=upload_image)
 
     def __str__(self):
@@ -46,4 +46,4 @@ class Product(PKMixin):
     items = models.ManyToManyField(Item)
 
     def __str__(self):
-        return f"{self.name} | {self.price} |{self.sku}"
+        return f"{self.name} | {self.price} | {self.sku}"
