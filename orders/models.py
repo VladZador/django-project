@@ -33,7 +33,8 @@ class Order(PKMixin):
             if self.discount.discount_type == Discount.VALUE:
                 self.total_amount = self.total_amount - self.discount.amount
             else:
-                self.total_amount = self.total_amount * (1 - self.discount.amount/100)
+                self.total_amount = self.total_amount * \
+                                    (1 - self.discount.amount/100)
         total = self.total_amount.quantize(Decimal('.01'))
         return total if total > 0 else 0
 
@@ -54,4 +55,5 @@ class Discount(PKMixin):
     )
 
     def __str__(self):
-        return f"{self.code} | {self.amount} | {self.get_discount_type_display()}"
+        return f"{self.code} | {self.amount} |" \
+               f"{self.get_discount_type_display()}"

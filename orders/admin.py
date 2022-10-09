@@ -6,7 +6,9 @@ from .models import Order, Discount
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     filter_horizontal = ("products",)
-    list_display = ("total_amount", "created_at", "discount", "get_total_amount")
+    list_display = (
+        "total_amount", "created_at", "discount", "get_total_amount"
+    )
     list_filter = ("created_at", "total_amount")
     readonly_fields = ("get_total_amount",)
 

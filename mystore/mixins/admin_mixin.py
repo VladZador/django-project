@@ -25,10 +25,10 @@ class ThumbnailAdminMixin:
     #     return f'<img src="{obj.image.url}" width="64" height="64"/>'
 
     def image_field(self, obj):
-        return mark_safe(f"<img src='{obj.image.url}' width='64' height='64' />")
+        return mark_safe(f"<img src='{obj.image.url}' "
+                         f"width='64' height='64'/>")
 
     image_field.short_description = 'Image thumbnail'
 
-    # todo: check if this is needed
     class Meta:
         abstract = True

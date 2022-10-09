@@ -20,4 +20,3 @@ class ProductAdmin(admin.ModelAdmin):
     filter_horizontal = ("items", )
     list_display = ("name", "price")
     list_filter = ("price", )
-
