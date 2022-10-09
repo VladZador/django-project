@@ -1,21 +1,20 @@
 from django.contrib import admin
 
 from .models import Item, Category, Product
+from mystore.mystore.mixins.admin_mixin import ThumbnailAdminMixin
 
 
 @admin.register(Item)
-class ItemAdmin(admin.ModelAdmin):
-    list_display = ("name", "created_at",) #'image_tag',)
+class ItemAdmin(ThumbnailAdminMixin, admin.ModelAdmin):
+    list_display = ("name", "created_at")
     list_filter = ("created_at",)
-    # fields = ('image_tag',)
-    # readonly_fields = ('image_tag',)
+    readonly_fields = ('image_field',)
 
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "created_at",) #'image_tag',)
-    # fields = ('image_tag',)
-    # readonly_fields = ('image_tag',)
+class CategoryAdmin(ThumbnailAdminMixin, admin.ModelAdmin):
+    list_display = ("name", "created_at")
+    readonly_fields = ('image_field',)
 
 
 @admin.register(Product)

@@ -25,16 +25,14 @@ class Order(PKMixin):
         """
         Calculates the total price of the order when
         the discount is applied.
-        :return: total price
+        :return: total_amount
         """
-        if self.discount.discount_type == Discount.VALUE:
-            total_price = self.total_amount - self.discount.amount
-        else:
-            total_price = self.total_amount * (1 - self.discount.amount/100)
-        return total_price if total_price > 0 else 0
-
-    def __str__(self):
-        return f"{self.total_amount}"
+        if self.discount:
+            if self.discount.discount_type == Discount.VALUE:
+                self.total_amount = self.total_amount - self.discount.amount
+            else:
+                self.total_amount = self.total_amount * (1 - self.discount.amount/100)
+        return self.total_amount if self.total_amount > 0 else 0
 
 
 class Discount(PKMixin):
@@ -53,4 +51,4 @@ class Discount(PKMixin):
     )
 
     def __str__(self):
-        return f"{self.code} | {self.amount}"
+        return f"{self.code} | {self.amount} | {self.get_discount_type_display()}"
