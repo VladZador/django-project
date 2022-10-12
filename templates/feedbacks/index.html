@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Feedback Page</title>
+  </head>
+  <body>
+    <h1>Items</h1>
+
+  {% for feedback in feedbacks %}
+    <p>
+      <span>Text: {{feedback.text}}</span>
+      <span>Rating: {{feedback.rating}}</span>
+    </p>
+  {% endfor %}
+  <div>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% for field in form %}
+        <label>{{ field.label }}</label>
+        {{field}}
+      {% endfor %}
+      <input type="submit" value="Create Feedback">
+    </form>
+  </div>
+  </body>
+</html>
