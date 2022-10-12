@@ -5,14 +5,32 @@
     <title>Feedback Page</title>
   </head>
   <body>
-    <h1>Items</h1>
+    <h1>Feedbacks</h1>
 
   {% for feedback in feedbacks %}
     <p>
       <span>Text: {{feedback.text}}</span>
+      <span>User: {{feedback.user}}</span>
       <span>Rating: {{feedback.rating}}</span>
     </p>
   {% endfor %}
+
+    <!-- For error display -->
+    {% if form.errors %}
+    {% for field in form %}
+        {% for error in field.errors %}
+            <div class="alert alert-danger">
+                <strong>{{ error|escape }}</strong>
+            </div>
+        {% endfor %}
+        {% endfor %}
+    {% for error in form.non_field_errors %}
+        <div class="alert alert-danger">
+            <strong>{{ error|escape }}</strong>
+        </div>
+    {% endfor %}
+    {% endif %}
+
   <div>
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}

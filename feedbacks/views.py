@@ -19,4 +19,4 @@ def feedbacks(request, *args, **kwargs):
         'form': form
     }
 
-    return render(request, 'feedbacks/index.html', context)
+    return render(request, 'feedbacks/index.html', context, *args, **kwargs)
