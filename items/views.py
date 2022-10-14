@@ -4,7 +4,7 @@ from .models import Item
 from .forms import ItemForm
 
 
-def index(request, *args, **kwargs):
+def items(request, *args, **kwargs):
     if request.method == "POST":
         form = ItemForm(request.POST, files=request.FILES)
         if form.is_valid():
