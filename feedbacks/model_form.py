@@ -20,7 +20,4 @@ class FeedbackModelForm(forms.ModelForm):
         punctuation characters are left
         :return: string with cleaned text
         """
-        cleaned_text = re.sub(
-            "[^A-Za-z0-9-,.'\"!? ]", "", self.cleaned_data["text"]
-        )
-        return cleaned_text
+        return re.sub("[^A-Za-z0-9-,.'\"!? ]", "", self.cleaned_data["text"])
