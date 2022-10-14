@@ -1,6 +1,6 @@
 from django.contrib.auth import login, authenticate
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, FormView
+from django.views.generic import FormView  # TemplateView
 
 from .forms import RegistrationForm  # LoginForm
 
