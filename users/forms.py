@@ -1,6 +1,8 @@
 # from django import forms
 from django.contrib.auth import get_user_model  # authenticate
 from django.contrib.auth.forms import UserCreationForm, UsernameField
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 
 # class LoginForm(forms.Form):
@@ -37,4 +39,10 @@ class RegistrationForm(UserCreationForm):
 
     def clean(self):
         self.instance.username = self.cleaned_data['email'].split('@')[0]
-        return self.cleaned_data
+        if not self.instance.username:
+            raise ValidationError("Email is empty")
+        try:
+            User.objects.get(username=self.instance.username)
+            raise ValidationError("User with this username already exists")
+        except User.DoesNotExist:
+            return self.cleaned_data

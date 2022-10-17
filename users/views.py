@@ -1,4 +1,4 @@
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login
 from django.urls import reverse_lazy
 from django.views.generic import FormView  # TemplateView
 
@@ -31,18 +31,6 @@ class SignupView(FormView):
     form_class = RegistrationForm
     success_url = reverse_lazy("items")
 
-    def log_the_user(self, request):
-        username = request.POST.get('email')[0].split("@")[0]
-        password = request.POST.get('password1')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return True
-
     def form_valid(self, form):
-        try:
-            self.log_the_user(self.request)
-            return super().form_valid(form)
-        except IndexError:
-            form.errors.update({"email": "Email is empty"})
-            return super().form_invalid(form)
+        login(self.request, form.save())
+        return super().form_valid(form)
