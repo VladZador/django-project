@@ -7,7 +7,3 @@ urlpatterns = [
     path("", include(urls)),
     path("signup/", SignupView.as_view(), name="signup"),
 ]
-
-# 1. form (username, email, password, password2)
-# 2. save model -> user instance
-# 3. login user instance

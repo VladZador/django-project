@@ -13,16 +13,6 @@ def upload_image(instance, filename):
            f"{instance.id}/image{extension}"
 
 
-class Item(PKMixin):
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
-    image = models.ImageField(upload_to=upload_image)
-    category = models.ForeignKey("Category", on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"{self.name} | {self.category}"
-
-
 class Category(PKMixin):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -37,13 +27,16 @@ class Category(PKMixin):
 
 class Product(PKMixin):
     name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    image = models.ImageField(upload_to=upload_image)
+    category = models.ForeignKey("Category", on_delete=models.CASCADE)
     price = models.DecimalField(
         max_digits=8,
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.01"))]
     )
     sku = models.CharField(max_length=255)
-    items = models.ManyToManyField(Item)
+    products = models.ManyToManyField("Product", blank=True)
 
     def __str__(self):
-        return f"{self.name} | {self.price} | {self.sku}"
+        return f"{self.name} | {self.category} | {self.price} | {self.sku}"

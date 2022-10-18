@@ -17,15 +17,24 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 
+# todo: check all urls. Maybe it's better to import urlpatterns from every url
+#  file in apps than explicitly write them down here
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("items/", include("items.urls")),
+    path("products/", include("products.urls")),
     path("feedbacks/", include("feedbacks.urls")),
-    path("", include("users.urls")),
+    path("account/", include("users.urls")),
+    path("", include("main.urls")),
 ]
 
 if settings.DEBUG:
     from django.conf.urls.static import static
 
-    urlpatterns += static(settings.MEDIA_URL,
-                          document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT
+    )
+    urlpatterns += static(
+        settings.STATIC_URL,
+        document_root=settings.STATIC_ROOT
+    )
