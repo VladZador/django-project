@@ -4,6 +4,6 @@ from django.contrib.auth import urls
 from users.views import SignupView
 
 urlpatterns = [
-    path("", include(urls)),
-    path("signup/", SignupView.as_view(), name="signup"),
+    path("account/", include(urls)),
+    path("account/signup/", SignupView.as_view(), name="signup"),
 ]

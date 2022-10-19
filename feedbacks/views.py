@@ -6,7 +6,7 @@ from .models import Feedback
 
 
 @login_required
-def feedbacks(request, *args, **kwargs):
+def feedbacks_view(request, *args, **kwargs):
     user = request.user
     if request.method == 'POST':
         form = FeedbackModelForm(user=user, data=request.POST)
@@ -18,5 +18,4 @@ def feedbacks(request, *args, **kwargs):
         'feedbacks': Feedback.objects.all(),
         'form': form
     }
-
     return render(request, 'feedbacks/index.html', context, *args, **kwargs)
