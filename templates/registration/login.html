@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
 <h1>Login</h1>
-{{request.user.is_authenticated}}
   <div>
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
@@ -20,5 +17,4 @@
       {{ form.errors }}
     </p>
   </div>
-</body>
-</html>
+{% endblock content %}

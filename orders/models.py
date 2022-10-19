@@ -4,7 +4,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 
 from mystore.mixins.model_mixins import PKMixin
-from items.models import Product
+from products.models import Product
 
 
 class Order(PKMixin):
@@ -27,6 +27,7 @@ class Order(PKMixin):
         """
         Calculates the total price of the order when
         the discount is applied.
+
         :return: total_amount
         """
         if self.discount:
