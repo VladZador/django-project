@@ -20,7 +20,14 @@
                       </div>
                     </div>
                   </div>
+                    {% empty %}
+                    <div>
+                        <h3>Sorry, the product list is currently empty</h3>
+                    </div>
                 {% endfor %}
+                <div class="col p-3 d-md-flex justify-content-md-end">
+                    <a href="{% url 'product_list_export_csv' %}">Export product list (csv)</a>
+                </div>
             </div>
         </div>
 </section>
