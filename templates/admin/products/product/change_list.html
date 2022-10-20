@@ -1,0 +1,10 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block content %}
+
+<!--todo: it's a hardcode. Need to find a way to add reverse url-->
+<a href="import_csv/">Import products from a csv file</a>
+
+{{ block.super }}
+{% endblock content %}

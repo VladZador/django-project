@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     "feedbacks",
     "users",
     "main",
+    # extensions
+    "django_extensions",
 ]
 
 MIDDLEWARE = [
