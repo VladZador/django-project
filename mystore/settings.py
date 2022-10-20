@@ -35,6 +35,8 @@ DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(",")
 
+DOMAIN = env("DOMAIN")
+
 
 # Application definition
 
