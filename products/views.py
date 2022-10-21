@@ -18,6 +18,7 @@ class ProductDetailView(DetailView):
 
 @login_required
 def export_csv(request, *args, **kwargs):
+    """Creates a csv file with products data from the database."""
     response = HttpResponse(
         content_type='text/csv',
         headers={
@@ -32,6 +33,9 @@ def export_csv(request, *args, **kwargs):
 
 @login_required
 def export_csv_detail(request, *args, **kwargs):
+    """
+    Creates a csv file with data of the specified product from the database.
+    """
     response = HttpResponse(
         content_type='text/csv',
         headers={
@@ -46,6 +50,7 @@ def export_csv_detail(request, *args, **kwargs):
 
 
 def _create_csv_writer(response):
+    """Creates a csv writer object with the product info headers."""
     fieldnames = ["name", "description", "category", "price", "sku", "image"]
     writer = csv.DictWriter(response, fieldnames=fieldnames)
     writer.writeheader()
@@ -53,6 +58,7 @@ def _create_csv_writer(response):
 
 
 def _write_csv_row(writer, product_instance):
+    """Adds parameters to be passed to the csv writer object."""
     writer.writerow(
         {
             "name": product_instance.name,
@@ -64,7 +70,3 @@ def _write_csv_row(writer, product_instance):
         }
     )
     return writer
-
-
-def import_csv(request, *args, **kwargs):
-    pass
