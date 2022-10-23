@@ -1,11 +1,11 @@
 import csv
 from io import StringIO
 
-from django import forms
 from django.contrib import admin, messages
 from django.shortcuts import render
 from django.urls import path
 
+from .forms import CsvImportForm
 from .models import Category, Product
 from mystore.mixins.admin_mixin import ThumbnailAdminMixin
 
@@ -62,7 +62,7 @@ class ProductAdmin(ThumbnailAdminMixin, admin.ModelAdmin):
 
         :return: None
         """
-        with open("static_dev/images/blank.png", "rb") as blank_image:
+        with open("static/images/blank.png", "rb") as blank_image:
             product_list = []
             for product_data in file_data:
                 try:
@@ -97,8 +97,7 @@ class ProductAdmin(ThumbnailAdminMixin, admin.ModelAdmin):
                     except KeyError as error:
                         messages.error(request, f"Column {error} is not found")
                         break
-        Product.objects.bulk_create(product_list)
-
-
-class CsvImportForm(forms.Form):
-    csv_import = forms.FileField()
+        if product_list:
+            Product.objects.bulk_create(product_list)
+        else:
+            messages.error(request, "Data is not imported")

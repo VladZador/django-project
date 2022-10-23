@@ -18,15 +18,15 @@ class ThumbnailAdminMixin:
             list_display = ('image_field',) + list_display
         return list_display
 
-    # @mark_safe
-    # def image_field(self, obj):
-    #     if not obj.image:
-    #         return 'No image'
-    #     return f'<img src="{obj.image.url}" width="64" height="64"/>'
-
+    @mark_safe
     def image_field(self, obj):
-        return mark_safe(f"<img src='{obj.image.url}' "
-                         f"width='64' height='64'/>")
+        if not obj.image:
+            return 'No image'
+        return f'<img src="{obj.image.url}" width="64" height="64"/>'
+
+    # def image_field(self, obj):
+    #     return mark_safe(f"<img src='{obj.image.url}' "
+    #                      f"width='64' height='64'/>")
 
     image_field.short_description = 'Image thumbnail'
 
