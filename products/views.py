@@ -3,8 +3,10 @@ import csv
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView
 
+from orders.models import Order
 from .models import Product
 
 
@@ -14,6 +16,16 @@ class ProductListView(ListView):
 
 class ProductDetailView(DetailView):
     model = Product
+
+
+@login_required
+def add_to_cart(request, *args, **kwargs):
+    if request.method == 'GET':
+        order = Order.objects.get_or_create(user=request.user, is_active=True)[0]
+        product = Product.objects.get(pk=kwargs.pop("pk"))
+        order.products.add(product)
+        order.save()
+    return redirect("product_list")
 
 
 @login_required

@@ -1,3 +1,8 @@
-# from django.shortcuts import render
+from django.views.generic import DetailView
 
-# Create your views here.
+from .models import Order
+
+
+# todo: find a way to pass user to the queryset
+class OrderDetailView(DetailView):
+    queryset = Order.objects.get(user=request.user, is_active=True)

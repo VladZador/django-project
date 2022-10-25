@@ -9,7 +9,7 @@ from products.models import Product
 
 class Order(PKMixin):
     products = models.ManyToManyField(Product)
-    total_amount = models.DecimalField(max_digits=8, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True)
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.SET_NULL,
@@ -22,6 +22,8 @@ class Order(PKMixin):
         null=True,
         blank=True,
     )
+    is_active = models.BooleanField(default=True)
+    is_paid = models.BooleanField(default=False)
 
     def calculate_with_discount(self):
         """

@@ -15,7 +15,7 @@
                   <p class="text">{{product.description}}</p>
                   <p class="text">Price: {{product.price}} UAH</p>
                   <p class="text">sku: {{product.sku}}</p>
-                  <a href="#" class="btn btn-primary">Add to cart</a>
+                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary">Add to cart</a>
 
                 </div>
                 <div class="col p-3 d-md-flex justify-content-md-end">
