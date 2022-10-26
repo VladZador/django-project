@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<section class="cart">
+        <div class="container">
+            {% if order %}
+            {% for product in order.products.all %}
+            <div class="row">
+                <div class="col-2 p-3">
+                    <figure class="text-center">
+                        <img width="100" class="product-image" src={{product.image.url}} >
+                    </figure>
+                </div>
+                <div class="col p-3">
+                      <a class="title" href="{% url 'product_detail' product.id %}">{{product.name}}</a>
+                      <p class="text">Category: {{product.category}}</p>
+                      <p class="text">{{product.description|truncatechars:120 }}</p>
+                      <p class="text">Price: {{product.price}} UAH</p>
+                      <p class="text">sku: {{product.sku}}</p>
+                </div>
+                <div class="col-1 p-3">
+                    <button type="button" class="btn-close" aria-label="Close"></button>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+                <div class="row justify-content-md-center">Your cart is empty</div>
+            {% endif %}
+        </div>
+</section>
+
+
+{% endblock content %}

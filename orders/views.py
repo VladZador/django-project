@@ -1,8 +1,15 @@
+from django.http import Http404
 from django.views.generic import DetailView
+from django.utils.translation import gettext_lazy as _
 
 from .models import Order
 
 
-# todo: find a way to pass user to the queryset
 class OrderDetailView(DetailView):
-    queryset = Order.objects.get(user=request.user, is_active=True)
+    model = Order
+
+    def get_object(self, **kwargs):
+        try:
+            return Order.objects.get(user=self.request.user, is_active=True)
+        except Order.DoesNotExist:
+            return None
