@@ -5,7 +5,9 @@
 
 <section class="cart">
         <div class="container">
+
             {% if order %}
+
             {% for product in order.products.all %}
             <div class="row">
                 <div class="col-2 p-3">
@@ -25,6 +27,36 @@
                 </div>
             </div>
             {% endfor %}
+
+            <div class="row">
+                <div class="col-2 p-3">Discount: </div>
+                <div class="col p-3">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <p>
+                            <input name="Discount code" value="{{ field.code }}">
+                            <input type="submit" value="Submit">
+                        </p>
+
+
+
+                    </form>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-2 p-3">Total amount: </div>
+                <div class="col p-3">
+                    <a> {{order.calculate_total_amount}}</a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col p-3">
+                    <a href="{% url 'remove_all_products' %}">Remove all products</a>
+                </div>
+            </div>
+
             {% else %}
                 <div class="row justify-content-md-center">Your cart is empty</div>
             {% endif %}

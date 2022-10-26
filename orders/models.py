@@ -25,13 +25,16 @@ class Order(PKMixin):
     is_active = models.BooleanField(default=True)
     is_paid = models.BooleanField(default=False)
 
-    def calculate_with_discount(self):
+    def calculate_total_amount(self):
         """
-        Calculates the total price of the order when
-        the discount is applied.
+        Calculates the total price of the order with(out) the discount.
 
         :return: total_amount
         """
+        self.total_amount = 0
+        for product in self.products.all():
+            self.total_amount += product.price
+
         if self.discount:
             if self.discount.discount_type == Discount.VALUE:
                 self.total_amount = self.total_amount - self.discount.amount

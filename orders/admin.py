@@ -20,5 +20,5 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Discount)
 class DiscountAdmin(admin.ModelAdmin):
-    list_display = ("code", "is_active", "discount_type")
+    list_display = ("code", "is_active", "amount", "discount_type")
     list_filter = ("discount_type",)
