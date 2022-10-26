@@ -2,9 +2,10 @@ import csv
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView
+from django.utils.translation import gettext_lazy as _
 
 from orders.models import Order
 from .models import Product
@@ -21,11 +22,14 @@ class ProductDetailView(DetailView):
 @login_required
 def add_to_cart(request, *args, **kwargs):
     if request.method == 'GET':
-        order = Order.objects.get_or_create(user=request.user, is_active=True)[0]
-        product = Product.objects.get(pk=kwargs.pop("pk"))
-        order.products.add(product)
-        order.save()
-    return redirect("product_list")
+        try:
+            order = Order.objects.get_or_create(user=request.user, is_active=True)[0]
+            product = Product.objects.get(pk=kwargs["pk"])
+            order.products.add(product)
+            order.save()
+            return redirect("product_list")
+        except Product.DoesNotExist:
+            raise Http404(_("Sorry, there is no product with this uuid"))
 
 
 @login_required
