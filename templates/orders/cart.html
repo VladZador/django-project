@@ -8,24 +8,66 @@
 
             {% if order %}
 
-            {% for product in order.products.iterator %}
-            <div class="row">
-                <div class="col-2 p-3">
-                    <figure class="text-center">
-                        <img width="50" class="product-image" src={{product.image.url}} >
-                    </figure>
-                </div>
-                <div class="col p-3">
-                      <a class="title" href="{% url 'product_detail' product.id %}">{{product.name}}</a>
-                      <p class="text">Price: {{product.price}} UAH</p>
-                </div>
-                <div class="col-2 p-3">
-                    <div class="btn btn-danger">
-                        <a href="{% url 'remove_product' product.id %}">X</a>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+            <table class="table">
+              <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Image</th>
+                    <th scope="col">Product</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Total price</th>
+                    <th scope="col"></th>
+                </tr>
+              </thead>
+
+              <tbody class="table-group-divider">
+              {% for product in order.products.iterator %}
+                <tr>
+                    <th scope="row">{{ forloop.counter }}</th>
+                    <td>
+                        <a class="text-center" href="{% url 'product_detail' product.id %}">
+                            <img width="50" class="product-image" src={{product.image.url}} >
+                        </a>
+                    </td>
+                    <td>
+                        <p class="title">{{product.name}}</p>
+                    </td>
+                    <td>
+                        <p class="text">Quantity</p>
+                    </td>
+                    <td><p class="text">{{product.price}} UAH</p></td>
+                    <td>
+                        <p class="text">Total price</p>
+                    </td>
+                    <td>
+                        <div class="btn btn-danger">
+                            <a href="{% url 'remove_product' product.id %}">X</a>
+                        </div>
+                    </td>
+                </tr>
+                    {% endfor %}
+              </tbody>
+            </table>
+
+<!--            {% for product in order.products.iterator %}-->
+<!--            <div class="row">-->
+<!--                <div class="col-2 p-3">-->
+<!--                    <a class="text-center" href="{% url 'product_detail' product.id %}">-->
+<!--                        <img width="50" class="product-image" src={{product.image.url}} >-->
+<!--                    </a>-->
+<!--                </div>-->
+<!--                <div class="col p-3">-->
+<!--                      <p class="title">{{product.name}}</p>-->
+<!--                      <p class="text">Price: {{product.price}} UAH</p>-->
+<!--                </div>-->
+<!--                <div class="col-2 p-3">-->
+<!--                    <div class="btn btn-danger">-->
+<!--                        <a href="{% url 'remove_product' product.id %}">X</a>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            {% endfor %}-->
 
             <div class="row">
                 <div class="col-2 p-3">Discount: </div>
@@ -37,7 +79,7 @@
                             <input type="submit" value="Submit">
                         </p>
                         {% if order.discount %}
-                        <h5>Discount "{{order.discount.code}}" is applied!</h5>
+                        <h6>Discount "{{order.discount.code}}" is applied!</h6>
                         <a href="{% url 'cancel_discount' %}">Click to cancel the discount</a>
                         {% endif %}
 
