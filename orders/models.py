@@ -35,6 +35,7 @@ class Order(PKMixin):
     #                                 name='unique_is_active')
     #     ]
 
+    # todo: think about different functions to display total price with and without the discount
     def calculate_total_amount(self):
         """
         Calculates the total price of the order with(out) the discount.
