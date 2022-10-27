@@ -1,6 +1,7 @@
 from django.http import Http404
 from django.shortcuts import redirect
-from django.views.generic import DetailView
+from django.urls import reverse_lazy
+from django.views.generic import DetailView, RedirectView
 from django.utils.translation import gettext_lazy as _
 
 from products.models import Product
@@ -18,14 +19,30 @@ class OrderDetailView(DetailView):
         except Order.DoesNotExist:
             return None
 
+
+class DiscountAddView(RedirectView):
+    url = reverse_lazy("cart")
+
     def post(self, request, *args, **kwargs):
-        breakpoint()
-        form = DiscountInputForm(request.POST, instance=self.get_object())
+        form = DiscountInputForm(
+            request.POST,
+            instance=Order.objects.get(user=self.request.user, is_active=True)
+        )
         if form.is_valid():
             form.save()
         return self.get(request, *args, **kwargs)
 
 
+# todo check whether "if request.method == 'GET'" could be removed
+def cancel_discount(request, *args, **kwargs):
+    if request.method == 'GET':
+        order = Order.objects.get(user=request.user, is_active=True)
+        order.discount = None
+        order.save()
+        return redirect("cart")
+
+
+# todo check whether "if request.method == 'GET'" could be removed
 def remove_product_from_cart(request, *args, **kwargs):
     if request.method == 'GET':
         try:
@@ -38,6 +55,7 @@ def remove_product_from_cart(request, *args, **kwargs):
             raise Http404(_("Sorry, there is no product with this uuid"))
 
 
+# todo check whether "if request.method == 'GET'" could be removed
 def remove_all_products(request, *args, **kwargs):
     if request.method == 'GET':
         order = Order.objects.get(user=request.user, is_active=True)

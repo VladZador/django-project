@@ -8,22 +8,21 @@
 
             {% if order %}
 
-            {% for product in order.products.all %}
+            {% for product in order.products.iterator %}
             <div class="row">
                 <div class="col-2 p-3">
                     <figure class="text-center">
-                        <img width="100" class="product-image" src={{product.image.url}} >
+                        <img width="50" class="product-image" src={{product.image.url}} >
                     </figure>
                 </div>
                 <div class="col p-3">
                       <a class="title" href="{% url 'product_detail' product.id %}">{{product.name}}</a>
-                      <p class="text">Category: {{product.category}}</p>
-                      <p class="text">{{product.description|truncatechars:120 }}</p>
                       <p class="text">Price: {{product.price}} UAH</p>
-                      <p class="text">sku: {{product.sku}}</p>
                 </div>
                 <div class="col-2 p-3">
-                    <a href="{% url 'remove_product' product.id %}">Remove this product</a>
+                    <div class="btn btn-danger">
+                        <a href="{% url 'remove_product' product.id %}">X</a>
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -31,15 +30,16 @@
             <div class="row">
                 <div class="col-2 p-3">Discount: </div>
                 <div class="col p-3">
-                    <form method="post">
+                    <form method="post" action="{% url 'add_discount' %}">
                         {% csrf_token %}
-
                         <p>
-                            <input name="Discount code" value="{{ field.code }}">
+                            <input name="discount" value="{{ field.code }}">
                             <input type="submit" value="Submit">
                         </p>
-
-
+                        {% if order.discount %}
+                        <h5>Discount "{{order.discount.code}}" is applied!</h5>
+                        <a href="{% url 'cancel_discount' %}">Click to cancel the discount</a>
+                        {% endif %}
 
                     </form>
                 </div>

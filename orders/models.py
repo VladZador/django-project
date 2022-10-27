@@ -8,8 +8,8 @@ from products.models import Product
 
 
 class Order(PKMixin):
-    products = models.ManyToManyField(Product)
-    total_amount = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    products = models.ManyToManyField(Product, through="OrderProductRelation")
+    total_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.SET_NULL,
@@ -24,6 +24,16 @@ class Order(PKMixin):
     )
     is_active = models.BooleanField(default=True)
     is_paid = models.BooleanField(default=False)
+
+    # todo: check if this is necessary. Maybe without a constraint user
+    #  won't be able to pay the second order with the same products and
+    #  their quantities
+    # class Meta:
+    #     constraints = [
+    #         models.UniqueConstraint(fields=['user'],
+    #                                 condition=models.Q(is_active=True),
+    #                                 name='unique_is_active')
+    #     ]
 
     def calculate_total_amount(self):
         """
@@ -43,6 +53,19 @@ class Order(PKMixin):
                                     (1 - self.discount.amount/100)
         total = self.total_amount.quantize(Decimal('.01'))
         return total if total > 0 else 0
+
+
+class OrderProductRelation(models.Model):
+    """
+    Intermediate table to connect the Order and Product models with
+    Many-to-Many relation with extra products quantity parameter.
+    """
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveSmallIntegerField(default=1)
+
+    class Meta:
+        unique_together = ("order", "product")
 
 
 class Discount(PKMixin):

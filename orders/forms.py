@@ -14,7 +14,6 @@ class DiscountInputForm(Form):
         self.instance = instance
 
     def clean_discount(self):
-        breakpoint()
         try:
             discount = Discount.objects.get(code=self.cleaned_data['discount'], is_active=True)
         except Discount.DoesNotExist:
@@ -23,3 +22,5 @@ class DiscountInputForm(Form):
 
     def save(self):
         self.instance.discount = self.cleaned_data["discount"]
+        self.instance.save()
+        return self.instance

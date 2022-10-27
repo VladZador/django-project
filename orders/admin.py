@@ -13,9 +13,9 @@ class OrderAdmin(admin.ModelAdmin):
     readonly_fields = ("get_total_amount",)
 
     def get_total_amount(self, obj=None):
-        return obj.calculate_with_discount()
+        return obj.calculate_total_amount()
 
-    get_total_amount.short_description = "Total amount with discount"
+    get_total_amount.short_description = "Total amount with/out discount"
 
 
 @admin.register(Discount)
