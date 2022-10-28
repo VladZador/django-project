@@ -4,59 +4,59 @@
 {% block content %}
 
 <section class="cart">
-        <div class="container">
+    <div class="container">
 
-            {% if order %}
+        {% if order %}
 
-            <table class="table">
-              <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Image</th>
-                    <th scope="col">Product</th>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">Price</th>
-                    <th scope="col">Total price</th>
-                    <th scope="col"></th>
-                </tr>
-              </thead>
+        <table class="table">
+          <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Image</th>
+                <th scope="col">Product</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Price, UAH</th>
+                <th scope="col">Total price, UAH</th>
+                <th scope="col"></th>
+            </tr>
+          </thead>
 
-              <tbody>
-              <form method="post"
-                    action="{% url 'recalculate_cart' %}"
-                    id="recalculateCart">
-                    {% csrf_token %}
-                    {% for product_relation in products_relation.iterator %}
-                <tr>
-                    <th scope="row">{{ forloop.counter }}</th>
-                    <td>
-                        <a class="text-center" href="{% url 'product_detail' product_relation.product_id %}">
-                            <img width="50" class="product-image" src={{product_relation.product.image.url}} >
-                        </a>
-                    </td>
-                    <td>{{product_relation.product.name}}</td>
-                    <td>
-                        <input class="form-control"
-                               type="number"
-                               name="quantity_{{ forloop.counter0 }}"
-                               value="{{ product_relation.quantity }}">
-                        <input type="hidden"
-                               name="product_{{ forloop.counter0 }}"
-                               value="{{ product_relation.product_id }}">
-                    </td>
-                    <td><p class="text">{{product_relation.product.price}} UAH</p></td>
-                    <td>{{ product_relation.full_price }}</td>
-                    <td>
-                        <input type="hidden"
-                               value="{{ product_relation.product.id }}"
-                               name="product">
-                        <input type="submit"
-                               class="btn btn-danger"
-                               value="X"
-                               formaction="{% url 'remove_product' product_relation.product_id %}">
-                    </td>
-                </tr>
-                    {% endfor %}
+          <tbody>
+          <form method="post"
+                action="{% url 'recalculate_cart' %}"
+                id="recalculateCart">
+                {% csrf_token %}
+                {% for product_relation in products_relation.iterator %}
+                    <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>
+                            <a class="text-center" href="{% url 'product_detail' product_relation.product_id %}">
+                                <img width="50" class="product-image" src={{product_relation.product.image.url}} >
+                            </a>
+                        </td>
+                        <td>{{product_relation.product.name}}</td>
+                        <td>
+                            <input class="form-control"
+                                   type="number"
+                                   name="quantity_{{ forloop.counter0 }}"
+                                   value="{{ product_relation.quantity }}">
+                            <input type="hidden"
+                                   name="product_{{ forloop.counter0 }}"
+                                   value="{{ product_relation.product_id }}">
+                        </td>
+                        <td><p class="text">{{product_relation.product.price}}</p></td>
+                        <td>{{ product_relation.full_price }}</td>
+                        <td>
+                            <input type="hidden"
+                                   value="{{ product_relation.product.id }}"
+                                   name="product">
+                            <input type="submit"
+                                   class="btn btn-danger"
+                                   value="X"
+                                   formaction="{% url 'remove_product' product_relation.product_id %}">
+                        </td>
+                    </tr>
+                {% endfor %}
                     <tr>
                         <td></td>
                         <td></td>
@@ -75,58 +75,47 @@
                                    formaction="{% url 'remove_all_products' %}">
                         </td>
                     </tr>
-              </form>
-              </tbody>
-            </table>
+          </form>
+          </tbody>
+        </table>
 
-<!--            {% for product in order.products.iterator %}-->
-<!--            <div class="row">-->
-<!--                <div class="col-2 p-3">-->
-<!--                    <a class="text-center" href="{% url 'product_detail' product.id %}">-->
-<!--                        <img width="50" class="product-image" src={{product.image.url}} >-->
-<!--                    </a>-->
-<!--                </div>-->
-<!--                <div class="col p-3">-->
-<!--                      <p class="title">{{product.name}}</p>-->
-<!--                      <p class="text">Price: {{product.price}} UAH</p>-->
-<!--                </div>-->
-<!--                <div class="col-2 p-3">-->
-<!--                    <div class="btn btn-danger">-->
-<!--                        <a href="{% url 'remove_product' product.id %}">X</a>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--            {% endfor %}-->
+        <div class="row">
+            <div class="col-2 p-3">Discount code: </div>
+            <div class="col p-3">
+                <form method="post" action="{% url 'add_discount' %}">
+                    {% csrf_token %}
+                    <p>
+                        <input name="discount" value="{{ field.code }}">
+                        <input type="submit" class="btn btn-outline-success" value="Submit">
+                    </p>
+                    {% if order.discount %}
+                    <h6>Discount "{{order.discount.code}}" is applied!</h6>
+                    <a href="{% url 'cancel_discount' %}">Click to cancel the discount</a>
+                    {% endif %}
 
-            <div class="row">
-                <div class="col-2 p-3">Discount: </div>
-                <div class="col p-3">
-                    <form method="post" action="{% url 'add_discount' %}">
-                        {% csrf_token %}
-                        <p>
-                            <input name="discount" value="{{ field.code }}">
-                            <input type="submit" value="Submit">
-                        </p>
-                        {% if order.discount %}
-                        <h6>Discount "{{order.discount.code}}" is applied!</h6>
-                        <a href="{% url 'cancel_discount' %}">Click to cancel the discount</a>
-                        {% endif %}
-
-                    </form>
-                </div>
+                </form>
             </div>
-
-            <div class="row">
-                <div class="col-2 p-3">Total amount: </div>
-                <div class="col p-3">
-                    <a> {{order.calculate_total_amount}}</a>
-                </div>
-            </div>
-
-            {% else %}
-                <div class="row justify-content-md-center">Your cart is empty</div>
-            {% endif %}
         </div>
+
+        <div class="row">
+            <div class="col-2 p-3">Total amount: </div>
+            <div class="col p-3">
+                <a> {{order.calculate_with_discount}} UAH</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col p-3 col d-flex justify-content-center">
+                <form method="post" action="{% url 'make_order' %}">
+                    {% csrf_token %}
+                        <input type="submit" class="btn btn-success" value="Create the order">
+                </form>
+            </div>
+        </div>
+
+        {% else %}
+            <div class="row justify-content-md-center">Your cart is empty</div>
+        {% endif %}
+    </div>
 </section>
 
 

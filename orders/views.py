@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.db.models import F
 from django.http import Http404
 from django.shortcuts import redirect
@@ -10,7 +11,7 @@ from .forms import DiscountInputForm, RecalculateCartForm
 from .models import Order
 
 
-class OrderDetailView(DetailView):
+class OrderDetailCreationView(DetailView):
     model = Order
     template_name = "orders/cart.html"
 
@@ -35,6 +36,9 @@ class OrderDetailView(DetailView):
             return self.get_object().products.through.objects\
                 .select_related("product")\
                 .annotate(full_price=F("product__price") * F("quantity"))
+
+    def post(self, *args, **kwargs):
+        return self.get(self, *args, **kwargs)
 
 
 class RecalculateCartView(RedirectView):
@@ -63,6 +67,8 @@ class DiscountAddView(RedirectView):
         return self.get(request, *args, **kwargs)
 
 
+# todo: try to rewrite this views as class-based
+@login_required
 def cancel_discount(request, *args, **kwargs):
     order = Order.objects.get(user=request.user, is_active=True)
     order.discount = None
@@ -70,6 +76,7 @@ def cancel_discount(request, *args, **kwargs):
     return redirect("cart")
 
 
+@login_required
 def remove_product_from_cart(request, *args, **kwargs):
     try:
         order = Order.objects.get(user=request.user, is_active=True)
@@ -81,11 +88,29 @@ def remove_product_from_cart(request, *args, **kwargs):
         raise Http404(_("Sorry, there is no product with this uuid"))
 
 
+@login_required
 def remove_all_products(request, *args, **kwargs):
     order = Order.objects.get(user=request.user, is_active=True)
     order.delete()
     return redirect("cart")
 
 
+class Ordering(RedirectView):
+    url = reverse_lazy("order")
+
+
+class OrderDetailView(OrderDetailCreationView):
+    """
+    Has the same attributes as its parent class, only the different template.
+    """
+    template_name = "orders/order.html"
+
+
+@login_required
 def pay_the_order(request, *args, **kwargs):
-    ...
+    order = Order.objects.get(user=request.user, is_active=True)
+    order.is_paid = True
+    order.is_active = False
+    order.total_amount = order.calculate_with_discount()
+    order.save()
+    return redirect("product_list")
