@@ -1,7 +1,8 @@
 from django.urls import path
 
 from .views import (
-    ProductListView, ProductDetailView, export_csv, export_csv_detail
+    ProductListView, ProductDetailView, export_csv, export_csv_detail,
+    AddToCartView
 )
 
 urlpatterns = [
@@ -15,5 +16,11 @@ urlpatterns = [
     path(
         'products/<uuid:pk>/csv/',
         export_csv_detail,
-        name="product_detail_export_csv"),
+        name="product_detail_export_csv"
+    ),
+    path(
+        'products/add-to-cart/<uuid:pk>/',
+        AddToCartView.as_view(),
+        name="add_to_cart"
+    )
 ]

@@ -15,10 +15,10 @@ class OrderAdmin(admin.ModelAdmin):
     def get_total_amount(self, obj=None):
         return obj.calculate_with_discount()
 
-    get_total_amount.short_description = "Total amount with discount"
+    get_total_amount.short_description = "Total amount with/out discount"
 
 
 @admin.register(Discount)
 class DiscountAdmin(admin.ModelAdmin):
-    list_display = ("code", "is_active", "discount_type")
+    list_display = ("code", "is_active", "amount", "discount_type")
     list_filter = ("discount_type",)

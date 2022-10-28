@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<section class="cart">
+    <div class="container">
+
+        {% if order %}
+
+        <table class="table">
+          <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Image</th>
+                <th scope="col">Product</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Price, UAH</th>
+                <th scope="col">Total price, UAH</th>
+            </tr>
+          </thead>
+
+          <tbody>
+          {% for product_relation in products_relation.iterator %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>
+                    <figure class="text-center">
+                        <img width="50" class="product-image" src={{product_relation.product.image.url}} >
+                    </figure>
+                </td>
+                <td>{{product_relation.product.name}}</td>
+                <td>{{product_relation.quantity}}</td>
+                <td><p class="text">{{product_relation.product.price}}</p></td>
+                <td>{{ product_relation.full_price }}</td>
+            </tr>
+          {% endfor %}
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Total: {{ order.calculate_total_amount }} UAH</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="row">
+            <div class="col-2 p-3">Discount: </div>
+            <div class="col p-3">
+                {% if order.discount %}
+                {{order.discount.code}}
+                {% else %}
+                no discount applied
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-2 p-3">Total amount: </div>
+            <div class="col p-3">
+                <a> {{order.calculate_with_discount}} UAH</a>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col p-5 col d-flex justify-content-start">
+                <form method="post" action="{% url 'cart' %}">
+                    {% csrf_token %}
+                        <input type="submit" class="btn btn-info" value="< Go back">
+                </form>
+            </div>
+
+            <div class="col p-5 col d-flex justify-content-end">
+                <form method="post" action="{% url 'pay_order' %}">
+                    {% csrf_token %}
+                        <input type="submit" class="btn btn-success" value="Pay the order">
+                </form>
+            </div>
+        </div>
+
+        {% else %}
+            <div class="row justify-content-md-center">Your cart is empty</div>
+        {% endif %}
+    </div>
+</section>
+
+
+{% endblock content %}

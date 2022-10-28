@@ -1,5 +1,5 @@
-from django import forms
+from django.forms import Form, FileField
 
 
-class CsvImportForm(forms.Form):
-    csv_import = forms.FileField()
+class CsvImportForm(Form):
+    csv_import = FileField()
