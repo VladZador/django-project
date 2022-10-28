@@ -10,7 +10,11 @@ from products.models import Product
 
 class Order(PKMixin):
     products = models.ManyToManyField(Product, through="OrderProductRelation")
-    total_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    total_amount = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0
+    )
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.SET_NULL,
@@ -26,66 +30,38 @@ class Order(PKMixin):
     is_active = models.BooleanField(default=True)
     is_paid = models.BooleanField(default=False)
 
-    # todo: check if this is necessary. Maybe without a constraint user
-    #  won't be able to pay the second order with the same products and
-    #  their quantities
-    # class Meta:
-    #     constraints = [
-    #         models.UniqueConstraint(fields=['user'],
-    #                                 condition=models.Q(is_active=True),
-    #                                 name='unique_is_active')
-    #     ]
-
-    # todo: think about different functions to display total price with and without the discount
-    # def calculate_total_amount(self):
-    #     """
-    #     Calculates the total price of the order with(out) the discount.
-    #
-    #     :return: total_amount
-    #     """
-    #     self.total_amount = 0
-    #     for product in self.products.all():
-    #         self.total_amount += product.price
-    #
-    #     if self.discount:
-    #         if self.discount.discount_type == Discount.VALUE:
-    #             self.total_amount = self.total_amount - self.discount.amount
-    #         else:
-    #             self.total_amount = self.total_amount * \
-    #                                 (1 - self.discount.amount/100)
-    #     total = self.total_amount.quantize(Decimal('.01'))
-    #     return total if total > 0 else 0
-
     def calculate_total_amount(self):
         """Calculates the total price of the order without the discount."""
-        return self.products.through.objects.aggregate(
-            total_price=Sum(F('product__price') * F('quantity'))
-                ).get('total_price') or 0
+        return self.products.through.objects.filter(order=self).aggregate(
+            total_price=Sum(F("product__price") * F("quantity"))
+                ).get("total_price") or 0
 
     def calculate_with_discount(self):
         """Calculates the total price of the order with the discount."""
-        return self.products.through.objects.annotate(
-            full_price=F('product__price') * F('quantity')
+        return self.products.through.objects.filter(order=self).annotate(
+            full_price=F("product__price") * F("quantity")
                 ).aggregate(
             total_amount=Case(
                 When(
                     order__discount__discount_type=Discount.VALUE,
-                    then=Sum(F("full_price")) - F('order__discount__amount')
+                    then=Sum("full_price") - F("order__discount__amount")
                 ),
                 When(
                     order__discount__discount_type=Discount.PERCENT,
-                    then=Sum(F("full_price")) * (1 - F('order__discount__amount') / 100)
+                    then=Sum("full_price") - (
+                            Sum("full_price")
+                            * F("order__discount__amount") / 100)
                 ),
-                default=Sum(F("full_price")),
+                default=Sum("full_price"),
                 output_field=models.DecimalField()
             )
-        ).get('total_amount') or 0
+        ).get("total_amount").quantize(Decimal('.01')) or 0
 
 
 class OrderProductRelation(models.Model):
     """
     Intermediate table to connect the Order and Product models with
-    Many-to-Many relation with extra products quantity parameter.
+    Many-to-Many-like relation with extra products quantity parameter.
     """
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)

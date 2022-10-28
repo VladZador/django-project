@@ -3,7 +3,8 @@ from django.db.models import F
 from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views.generic import DetailView, RedirectView
+from django.utils.decorators import method_decorator
+from django.views.generic import RedirectView, TemplateView
 from django.utils.translation import gettext_lazy as _
 
 from products.models import Product
@@ -11,8 +12,8 @@ from .forms import DiscountInputForm, RecalculateCartForm
 from .models import Order
 
 
-class OrderDetailCreationView(DetailView):
-    model = Order
+@method_decorator(login_required, name='dispatch')
+class OrderDetailView(TemplateView):
     template_name = "orders/cart.html"
 
     # Сделал возвращение None в случае отсутствия заказа для того, чтобы
@@ -33,7 +34,7 @@ class OrderDetailCreationView(DetailView):
 
     def get_queryset(self):
         if self.get_object():
-            return self.get_object().products.through.objects\
+            return self.get_object().products.through.objects.filter(order=self.get_object())\
                 .select_related("product")\
                 .annotate(full_price=F("product__price") * F("quantity"))
 
@@ -41,6 +42,7 @@ class OrderDetailCreationView(DetailView):
         return self.get(self, *args, **kwargs)
 
 
+@method_decorator(login_required, name='dispatch')
 class RecalculateCartView(RedirectView):
     url = reverse_lazy('cart')
 
@@ -54,6 +56,7 @@ class RecalculateCartView(RedirectView):
         return self.get(request, *args, **kwargs)
 
 
+@method_decorator(login_required, name='dispatch')
 class DiscountAddView(RedirectView):
     url = reverse_lazy("cart")
 
@@ -95,11 +98,13 @@ def remove_all_products(request, *args, **kwargs):
     return redirect("cart")
 
 
+@method_decorator(login_required, name='dispatch')
 class Ordering(RedirectView):
     url = reverse_lazy("order")
 
 
-class OrderDetailView(OrderDetailCreationView):
+@method_decorator(login_required, name='dispatch')
+class OrderDisplayView(OrderDetailView):
     """
     Has the same attributes as its parent class, only the different template.
     """
