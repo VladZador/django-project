@@ -38,10 +38,10 @@ class Order(PKMixin):
 
     def calculate_with_discount(self):
         """Calculates the total price of the order with the discount."""
-        return self.products.through.objects.filter(order=self).annotate(
-            full_price=F("product__price") * F("quantity")
-                ).aggregate(
-            total_amount=Case(
+        total_amount = self.products.through.objects\
+            .filter(order=self)\
+            .annotate(full_price=F("product__price") * F("quantity"))\
+            .aggregate(total_amount=Case(
                 When(
                     order__discount__discount_type=Discount.VALUE,
                     then=Sum("full_price") - F("order__discount__amount")
@@ -55,7 +55,8 @@ class Order(PKMixin):
                 default=Sum("full_price"),
                 output_field=models.DecimalField()
             )
-        ).get("total_amount").quantize(Decimal('.01')) or 0
+                ).get("total_amount")
+        return total_amount.quantize(Decimal('.01')) if total_amount else 0
 
 
 class OrderProductRelation(models.Model):

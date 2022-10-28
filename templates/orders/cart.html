@@ -105,7 +105,7 @@
         </div>
         <div class="row">
             <div class="col p-3 col d-flex justify-content-center">
-                <form method="post" action="{% url 'make_order' %}">
+                <form method="post" action="{% url 'order' %}">
                     {% csrf_token %}
                         <input type="submit" class="btn btn-success" value="Create the order">
                 </form>

@@ -43,9 +43,14 @@ class DiscountInputForm(Form):
 
     def clean_discount(self):
         try:
-            discount = Discount.objects.get(code=self.cleaned_data['discount'], is_active=True)
+            discount = Discount.objects.get(
+                code=self.cleaned_data['discount'],
+                is_active=True
+            )
         except Discount.DoesNotExist:
-            raise ValidationError(_("There's no discount with this code name"))
+            raise ValidationError(_(
+                "There's no discount with this code name"
+            ))
         return discount
 
     def save(self):

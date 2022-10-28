@@ -3,8 +3,9 @@ import csv
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, Http404
-from django.shortcuts import redirect
-from django.views.generic import ListView, DetailView
+from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.generic import ListView, DetailView, RedirectView
 from django.utils.translation import gettext_lazy as _
 
 from orders.models import Order
@@ -19,15 +20,20 @@ class ProductDetailView(DetailView):
     model = Product
 
 
-@login_required
-def add_to_cart(request, *args, **kwargs):
-    if request.method == 'GET':
+@method_decorator(login_required, name='dispatch')
+class AddToCartView(RedirectView):
+    url = reverse_lazy("product_list")
+
+    def get(self, request, *args, **kwargs):
         try:
-            order = Order.objects.get_or_create(user=request.user, is_active=True)[0]
+            order = Order.objects.get_or_create(
+                user=request.user,
+                is_active=True
+            )[0]
             product = Product.objects.get(pk=kwargs["pk"])
             order.products.add(product)
             order.save()
-            return redirect("product_list")
+            return super().get(request, *args, **kwargs)
         except Product.DoesNotExist:
             raise Http404(_("Sorry, there is no product with this uuid"))
 
