@@ -132,3 +132,6 @@ dmypy.json
 # project media
 /static/
 /media/
+
+# redis binary dump
+*.rdb
