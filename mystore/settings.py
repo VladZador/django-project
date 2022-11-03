@@ -53,9 +53,11 @@ INSTALLED_APPS = [
     "feedbacks",
     "users",
     "main",
+    "currencies",
     # extensions
     "django_extensions",
     "django_celery_results",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
