@@ -15,7 +15,7 @@ def feedbacks_view(request, *args, **kwargs):
     else:
         form = FeedbackModelForm(user=user)
     context = {
-        'feedbacks': Feedback.objects.all(),
+        'feedbacks': Feedback.get_feedbacks_cache(),
         'form': form
     }
     return render(request, 'feedbacks/index.html', context, *args, **kwargs)

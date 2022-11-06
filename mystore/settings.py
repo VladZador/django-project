@@ -157,3 +157,10 @@ LOGIN_URL = reverse_lazy('login')
 
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = "django_celery_results.backends.database.DatabaseBackend"  # noqa
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': env("CACHE_LOCATION"),
+    }
+}
