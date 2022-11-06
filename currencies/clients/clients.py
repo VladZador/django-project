@@ -82,8 +82,3 @@ class NationalBankAPI(GetCurrencyBaseClient):
             "get",
             params={"json": ""}
         )
-
-
-privat_currency_client = PrivatBankAPI()
-mono_currency_client = MonoBankAPI()
-national_currency_client = NationalBankAPI()
