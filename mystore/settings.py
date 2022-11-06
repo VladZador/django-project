@@ -160,7 +160,7 @@ CELERY_RESULT_BACKEND = "django_celery_results.backends.database.DatabaseBackend
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': env("MEMCACHE_LOCATION"),
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': env("CACHE_LOCATION"),
     }
 }
