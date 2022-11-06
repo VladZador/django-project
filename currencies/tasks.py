@@ -6,6 +6,7 @@ from celery.result import AsyncResult
 from django.utils import timezone
 
 from mystore.celery import app
+from mystore.model_choices import Currencies
 from .clients.clients import MonoBankAPI, NationalBankAPI, PrivatBankAPI
 from .models import CurrencyHistory
 
@@ -26,12 +27,11 @@ class CurrencyClient:
 class CurrenciesCreator:
     @staticmethod
     def privat(currency_dict, currency_history_list):
-        if currency_dict["ccy"] \
-                in [i[1] for i in CurrencyHistory.CURRENCY_CHOICES]:
-            for i in CurrencyHistory.CURRENCY_CHOICES:
+        if currency_dict["ccy"] in [i.label for i in Currencies]:
+            for i in Currencies:
                 # Changes the text currency code to an integer code
-                if currency_dict["ccy"] == i[1]:
-                    currency_dict["ccy"] = i[0]
+                if currency_dict["ccy"] == i.label:
+                    currency_dict["ccy"] = i.value
             currency_history_list.append(
                 CurrencyHistory(
                     currency=currency_dict["ccy"],
@@ -43,9 +43,8 @@ class CurrenciesCreator:
 
     @staticmethod
     def mono(currency_dict, currency_history_list):
-        if currency_dict["currencyCodeA"] \
-                in [i[0] for i in CurrencyHistory.CURRENCY_CHOICES] \
-                and currency_dict["currencyCodeB"] == CurrencyHistory.UAH:
+        if currency_dict["currencyCodeA"] in [i.value for i in Currencies] \
+                and currency_dict["currencyCodeB"] == Currencies.UAH.value:
             currency_history_list.append(
                 CurrencyHistory(
                     currency=currency_dict["currencyCodeA"],
@@ -57,8 +56,7 @@ class CurrenciesCreator:
 
     @staticmethod
     def national(currency_dict, currency_history_list):
-        if currency_dict["r030"] \
-                in [i[0] for i in CurrencyHistory.CURRENCY_CHOICES]:
+        if currency_dict["r030"] in [i.value for i in Currencies]:
             currency_history_list.append(
                 CurrencyHistory(
                     currency=currency_dict["r030"],

@@ -1,20 +1,13 @@
 from django.db import models
 
 from mystore.mixins.model_mixins import PKMixin
+from mystore.model_choices import Currencies
 
 
 class CurrencyHistory(PKMixin):
-    USD = 840
-    EUR = 978
-    UAH = 980
-    CURRENCY_CHOICES = [
-        (USD, "USD"),
-        (EUR, "EUR"),
-        (UAH, "UAH"),
-    ]
     currency = models.PositiveSmallIntegerField(
-        choices=CURRENCY_CHOICES,
-        default=USD,
+        choices=Currencies.choices,
+        default=Currencies.USD,
     )
     buy = models.DecimalField(
         max_digits=8,
