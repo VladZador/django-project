@@ -45,7 +45,7 @@ class Product(PKMixin):
     products = models.ManyToManyField("Product", blank=True)
 
     def __str__(self):
-        return f"{self.name} | {self.category} | {self.price} {self.get_currency_display}"
+        return f"{self.name} | {self.category} | {self.price} {self.get_currency_display()}"
 
     @property
     def exchange_price(self):
@@ -56,5 +56,5 @@ class Product(PKMixin):
 
     @property
     def exchange_rate(self):
-        return CurrencyHistory.objects.filter(currency=self.currency)\
-            .order_by("-created_at").first().sale
+        return getattr(CurrencyHistory.objects.filter(currency=self.currency)
+                       .order_by("-created_at").first(), "sale", 1)
