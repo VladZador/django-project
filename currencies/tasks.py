@@ -6,9 +6,8 @@ from celery.result import AsyncResult
 from django.utils import timezone
 
 from mystore.celery import app
-from .clients.clients import (
-    privat_currency_client, mono_currency_client, national_currency_client
-)
+from mystore.model_choices import Currencies
+from .clients.clients import MonoBankAPI, NationalBankAPI, PrivatBankAPI
 from .models import CurrencyHistory
 
 
@@ -19,94 +18,82 @@ def delete_old_currencies():
     ).delete()
 
 
-@app.task
-def get_currencies_privat():
-    currency_list = privat_currency_client.get_currency()
-    currency_history_list = []
-    for currency_dict in currency_list:
-        try:
-            if currency_dict["ccy"] \
-                    in [i[1] for i in CurrencyHistory.CURRENCY_CHOICES]:
-                for i in CurrencyHistory.CURRENCY_CHOICES:
-                    # Changes the text currency code to an integer code
-                    if currency_dict["ccy"] == i[1]:
-                        currency_dict["ccy"] = i[0]
-                currency_history_list.append(
-                    CurrencyHistory(
-                        currency=currency_dict["ccy"],
-                        buy=currency_dict["buy"],
-                        sale=currency_dict["sale"],
-                    )
+class CurrencyClient:
+    privat = PrivatBankAPI()
+    mono = MonoBankAPI()
+    national = NationalBankAPI()
+
+
+class CurrenciesCreator:
+    @staticmethod
+    def privat(currency_dict, currency_history_list):
+        if currency_dict["ccy"] in [i.label for i in Currencies]:
+            for i in Currencies:
+                # Changes the text currency code to an integer code
+                if currency_dict["ccy"] == i.label:
+                    currency_dict["ccy"] = i.value
+            currency_history_list.append(
+                CurrencyHistory(
+                    currency=currency_dict["ccy"],
+                    buy=currency_dict["buy"],
+                    sale=currency_dict["sale"],
                 )
-        except (KeyError, ValueError, TypeError):
-            ...
-            # todo: Add the errors logging, when we learn about them.
-            #  Check if "AsyncResult(id).state" returns failure when
-            #  handling the exception
+            )
+        return currency_history_list
+
+    @staticmethod
+    def mono(currency_dict, currency_history_list):
+        if currency_dict["currencyCodeA"] in [i.value for i in Currencies] \
+                and currency_dict["currencyCodeB"] == Currencies.UAH.value:
+            currency_history_list.append(
+                CurrencyHistory(
+                    currency=currency_dict["currencyCodeA"],
+                    buy=currency_dict["rateBuy"],
+                    sale=currency_dict["rateSell"],
+                )
+            )
+        return currency_history_list
+
+    @staticmethod
+    def national(currency_dict, currency_history_list):
+        if currency_dict["r030"] in [i.value for i in Currencies]:
+            currency_history_list.append(
+                CurrencyHistory(
+                    currency=currency_dict["r030"],
+                    buy=currency_dict["rate"],
+                    sale=currency_dict["rate"],
+                )
+            )
+        return currency_history_list
+
+
+@app.task
+def get_currencies_from_bank(bank_name):
+    client = CurrencyClient()
+    currency_list = getattr(client, bank_name).get_currency()
+    currency_history_list = []
+    creator = CurrenciesCreator()
+    try:
+        for currency_dict in currency_list:
+            currency_history_list = getattr(
+                creator, bank_name
+            )(currency_dict, currency_history_list)
+    except (KeyError, ValueError, TypeError):
+        ...
+        # todo: Add the errors logging, when we learn about them.
+        #  Check if "AsyncResult(id).state" returns failure when
+        #  handling the exception
     if currency_history_list:
         CurrencyHistory.objects.bulk_create(currency_history_list)
         delete_old_currencies.delay()
 
 
-@app.task
-def get_currencies_mono():
-    currency_list = mono_currency_client.get_currency()
-    currency_history_list = []
-    for currency_dict in currency_list:
-        try:
-            if currency_dict["currencyCodeA"]\
-                    in [i[0] for i in CurrencyHistory.CURRENCY_CHOICES]\
-                    and currency_dict["currencyCodeB"] == CurrencyHistory.UAH:
-                currency_history_list.append(
-                    CurrencyHistory(
-                        currency=currency_dict["currencyCodeA"],
-                        buy=currency_dict["rateBuy"],
-                        sale=currency_dict["rateSell"],
-                    )
-                )
-        except (KeyError, ValueError, TypeError):
-            ...
-            # todo: Add the errors logging, when we learn about them.
-            #  Check if "AsyncResult(id).state" returns failure when
-            #  handling the exception
-    if currency_history_list:
-        CurrencyHistory.objects.bulk_create(currency_history_list)
-        delete_old_currencies.delay()
-
-
-@app.task
-def get_currencies_national():
-    currency_list = national_currency_client.get_currency()
-    currency_history_list = []
-    for currency_dict in currency_list:
-        try:
-            if currency_dict["r030"] \
-                    in [i[0] for i in CurrencyHistory.CURRENCY_CHOICES]:
-                currency_history_list.append(
-                    CurrencyHistory(
-                        currency=currency_dict["r030"],
-                        buy=currency_dict["rate"],
-                        sale=currency_dict["rate"],
-                    )
-                )
-        except (KeyError, ValueError, TypeError):
-            ...
-            # todo: Add the errors logging, when we learn about them.
-            #  Check if "AsyncResult(id).state" returns failure when
-            #  handling the exception
-    if currency_history_list:
-        CurrencyHistory.objects.bulk_create(currency_history_list)
-        delete_old_currencies.delay()
-
-
-# Надеюсь, нормально, что я добавил небольшое ожидание в виде "sleep(5)".
-# Мне показалось, что способ с проверкой статуса наиболее оптимальный.
 @shared_task
-def get_currencies_from_bank():
-    first_try = get_currencies_privat.delay()
+def get_currencies():
+    first_try = get_currencies_from_bank.delay("privat")
     sleep(5)
     if AsyncResult(first_try.id).state == states.FAILURE:
-        second_try = get_currencies_mono.delay()
+        second_try = get_currencies_from_bank.delay("mono")
         sleep(5)
         if AsyncResult(second_try.id).state == states.FAILURE:
-            get_currencies_national.delay()
+            get_currencies_from_bank.delay("national")

@@ -15,8 +15,8 @@
                 <th scope="col">Image</th>
                 <th scope="col">Product</th>
                 <th scope="col">Quantity</th>
-                <th scope="col">Price, UAH</th>
-                <th scope="col">Total price, UAH</th>
+                <th scope="col">Price</th>
+                <th scope="col">Total price</th>
                 <th scope="col"></th>
             </tr>
           </thead>
@@ -44,8 +44,8 @@
                                    name="product_{{ forloop.counter0 }}"
                                    value="{{ product_relation.product_id }}">
                         </td>
-                        <td><p class="text">{{product_relation.product.price}}</p></td>
-                        <td>{{ product_relation.full_price }}</td>
+                        <td><p class="text">{{product_relation.product.price}} {{product_relation.product.get_currency_display}}</p></td>
+                        <td>{{product_relation.total_price}} {{product_relation.product.get_currency_display}}</td>
                         <td>
                             <input type="hidden"
                                    value="{{ product_relation.product.id }}"
@@ -67,7 +67,7 @@
                                    value="Recalculate">
                         </td>
                         <td></td>
-                        <td>Total: {{ order.calculate_total_amount }}</td>
+                        <td>Total: {{ order.calculate_total_amount }} UAH</td>
                         <td>
                             <input type="submit"
                                    class="btn btn-danger"

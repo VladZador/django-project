@@ -15,8 +15,8 @@
                 <th scope="col">Image</th>
                 <th scope="col">Product</th>
                 <th scope="col">Quantity</th>
-                <th scope="col">Price, UAH</th>
-                <th scope="col">Total price, UAH</th>
+                <th scope="col">Price</th>
+                <th scope="col">Total price</th>
             </tr>
           </thead>
 
@@ -31,8 +31,8 @@
                 </td>
                 <td>{{product_relation.product.name}}</td>
                 <td>{{product_relation.quantity}}</td>
-                <td><p class="text">{{product_relation.product.price}}</p></td>
-                <td>{{ product_relation.full_price }}</td>
+                <td><p class="text">{{product_relation.product.price}} {{product_relation.product.get_currency_display}}</p></td>
+                <td>{{ product_relation.total_price }} {{product_relation.product.get_currency_display}}</td>
             </tr>
           {% endfor %}
             <tr>
