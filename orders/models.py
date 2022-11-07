@@ -1,8 +1,6 @@
-from decimal import Decimal
-
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.db.models import F, Case, When, Sum
+from django.db.models import F, Sum
 
 from mystore.mixins.model_mixins import PKMixin
 from products.models import Product

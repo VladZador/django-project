@@ -45,7 +45,8 @@ class Product(PKMixin):
     products = models.ManyToManyField("Product", blank=True)
 
     def __str__(self):
-        return f"{self.name} | {self.category} | {self.price} {self.get_currency_display()}"
+        return f"{self.name} | {self.category} | " \
+               f"{self.price} {self.get_currency_display()}"
 
     @property
     def exchange_price(self):
