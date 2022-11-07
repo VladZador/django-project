@@ -75,7 +75,9 @@ def get_currencies_from_bank(bank_name):
     creator = CurrenciesCreator()
     try:
         for currency_dict in currency_list:
-            currency_history_list = getattr(creator, bank_name)(currency_dict, currency_history_list)
+            currency_history_list = getattr(
+                creator, bank_name
+            )(currency_dict, currency_history_list)
     except (KeyError, ValueError, TypeError):
         ...
         # todo: Add the errors logging, when we learn about them.

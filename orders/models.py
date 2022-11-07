@@ -30,33 +30,57 @@ class Order(PKMixin):
     is_active = models.BooleanField(default=True)
     is_paid = models.BooleanField(default=False)
 
+    def get_products_through(self):
+        return self.products.through.objects\
+            .filter(order=self)\
+            .select_related("product")\
+            .annotate(total_price=Sum(F("product__price") * F("quantity")))
+
     def calculate_total_amount(self):
         """Calculates the total price of the order without the discount."""
-        return self.products.through.objects.filter(order=self).aggregate(
-            total_price=Sum(F("product__price") * F("quantity"))
-                ).get("total_price") or 0
+        total_amount = 0
+        for product_relation in self.get_products_through().iterator():
+            total_amount += product_relation.total_price\
+                            * product_relation.product.exchange_rate
+        return round(total_amount, 2)
+
+    # def calculate_total_amount(self):
+    #     """Calculates the total price of the order without the discount."""
+    #     return self.products.through.objects.filter(order=self).aggregate(
+    #         total_price=Sum(F("product__price") * F("quantity"))
+    #             ).get("total_price") or 0
 
     def calculate_with_discount(self):
         """Calculates the total price of the order with the discount."""
-        total_amount = self.products.through.objects\
-            .filter(order=self)\
-            .annotate(full_price=F("product__price") * F("quantity"))\
-            .aggregate(total_amount=Case(
-                When(
-                    order__discount__discount_type=Discount.VALUE,
-                    then=Sum("full_price") - F("order__discount__amount")
-                ),
-                When(
-                    order__discount__discount_type=Discount.PERCENT,
-                    then=Sum("full_price") - (
-                            Sum("full_price")
-                            * F("order__discount__amount") / 100)
-                ),
-                default=Sum("full_price"),
-                output_field=models.DecimalField()
-            )
-                ).get("total_amount")
-        return total_amount.quantize(Decimal('.01')) if total_amount else 0
+        total_amount = self.calculate_total_amount()
+        if self.discount:
+            if self.discount.discount_type == Discount.VALUE:
+                total_amount -= self.discount.amount
+            else:
+                total_amount -= (total_amount * self.discount.amount/100)
+        return round(total_amount, 2)
+
+    # def calculate_with_discount(self):
+    #     """Calculates the total price of the order with the discount."""
+    #     total_amount = self.products.through.objects\
+    #         .filter(order=self)\
+    #         .annotate(full_price=F("product__price") * F("quantity"))\
+    #         .aggregate(total_amount=Case(
+    #             When(
+    #                 order__discount__discount_type=Discount.VALUE,
+    #                 then=Sum("full_price") - F("order__discount__amount")
+    #             ),
+    #             When(
+    #                 order__discount__discount_type=Discount.PERCENT,
+    #                 then=Sum("full_price") - (
+    #                         Sum("full_price")
+    #                         * F("order__discount__amount") / 100)
+    #             ),
+    #             default=Sum("full_price"),
+    #             output_field=models.DecimalField()
+    #         )
+    #             ).get("total_amount")
+    #     return total_amount.quantize(Decimal('.01')) if total_amount else 0
 
 
 class OrderProductRelation(models.Model):

@@ -1,5 +1,4 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import F
 from django.http import Http404
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -11,13 +10,8 @@ from .forms import DiscountInputForm, RecalculateCartForm
 from .mixins import CurrentOrderMixin
 
 
-# todo: remove comments in cyrillic after hw is checked
-
-# я надеюсь, что декораторов я нацепил не слишком много. Моя логика такова:
-# все эти страницы не должны быть доступны незалогиненым пользователям,
-# иначе на каждой будут возникать ошибки из-за того, что у "Анонимного юзера"
-# нет заказов. А с декоратором их будет перенаправлять на страницу логина,
-# даже если они случайно забрели на эти страницы.
+# todo: update views so that they don't contain save() logic with the orders.
+#  It should be done in the forms.py
 
 @method_decorator(login_required, name='dispatch')
 class OrderDetailView(CurrentOrderMixin, TemplateView):
@@ -33,9 +27,7 @@ class OrderDetailView(CurrentOrderMixin, TemplateView):
 
     def get_queryset(self):
         if self.get_object():
-            return self.get_object().products.through.objects\
-                .filter(order=self.get_object()).select_related("product")\
-                .annotate(full_price=F("product__price") * F("quantity"))
+            return self.get_object().get_products_through()
 
     def post(self, *args, **kwargs):
         return self.get(self, *args, **kwargs)
