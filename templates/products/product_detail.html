@@ -15,7 +15,11 @@
                   <p class="text">{{product.description}}</p>
                   <p class="text">Price: {{product.price}} UAH</p>
                   <p class="text">sku: {{product.sku}}</p>
-                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary">Add to cart</a>
+                    <form method="post" action="{% url 'add_to_cart' %}">
+                        {% csrf_token %}
+                        <input type="hidden" value="{{ product.id }}" name="product">
+                        <input type="submit" class="btn btn-primary" value="Add to cart">
+                    </form>
 
                 </div>
                 <div class="col p-3 d-md-flex justify-content-md-end">

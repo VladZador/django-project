@@ -42,6 +42,11 @@ class Order(PKMixin):
                             * product_relation.product.exchange_rate
         return round(total_amount, 2)
 
+    # The code below will not work properly due to not using currencies
+    # and exchange rates. But it will be more efficient if we're not using
+    # currencies in product models because it'll use fewer connections
+    # to the database.
+    #
     # def calculate_total_amount(self):
     #     """Calculates the total price of the order without the discount."""
     #     return self.products.through.objects.filter(order=self).aggregate(
@@ -58,6 +63,11 @@ class Order(PKMixin):
                 total_amount -= (total_amount * self.discount.amount/100)
         return round(total_amount, 2)
 
+    # The code below will not work properly due to not using currencies
+    # and exchange rates. But it will be more efficient if we're not using
+    # currencies in product models because it'll use fewer connections
+    # to the database.
+    #
     # def calculate_with_discount(self):
     #     """Calculates the total price of the order with the discount."""
     #     total_amount = self.products.through.objects\
