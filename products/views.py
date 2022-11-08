@@ -2,13 +2,13 @@ import csv
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, DetailView, RedirectView
-from django.utils.translation import gettext_lazy as _
 
 from orders.models import Order
+from .forms import AddToCartForm
 from .models import Product
 
 
@@ -24,18 +24,17 @@ class ProductDetailView(DetailView):
 class AddToCartView(RedirectView):
     url = reverse_lazy("product_list")
 
-    def get(self, request, *args, **kwargs):
-        try:
-            order = Order.objects.get_or_create(
-                user=request.user,
-                is_active=True
-            )[0]
-            product = Product.objects.get(pk=kwargs["pk"])
-            order.products.add(product)
-            order.save()
-            return super().get(request, *args, **kwargs)
-        except Product.DoesNotExist:
-            raise Http404(_("Sorry, there is no product with this uuid"))
+    def get_order_object(self):
+        return Order.objects.get_or_create(
+            user=self.request.user,
+            is_active=True
+        )[0]
+
+    def post(self, request, *args, **kwargs):
+        form = AddToCartForm(request.POST,  instance=self.get_order_object())
+        if form.is_valid():
+            form.save()
+        return self.get(request, *args, **kwargs)
 
 
 @login_required

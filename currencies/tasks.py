@@ -68,7 +68,7 @@ class CurrenciesCreator:
 
 
 @app.task
-def get_currencies_from_bank(bank_name):
+def get_currencies_from_bank(bank_name: str):
     client = CurrencyClient()
     currency_list = getattr(client, bank_name).get_currency()
     currency_history_list = []

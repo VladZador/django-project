@@ -47,9 +47,6 @@
                         <td><p class="text">{{product_relation.product.price}} {{product_relation.product.get_currency_display}}</p></td>
                         <td>{{product_relation.total_price}} {{product_relation.product.get_currency_display}}</td>
                         <td>
-                            <input type="hidden"
-                                   value="{{ product_relation.product.id }}"
-                                   name="product">
                             <input type="submit"
                                    class="btn btn-danger"
                                    value="X"
@@ -90,7 +87,10 @@
                     </p>
                     {% if order.discount %}
                     <h6>Discount "{{order.discount.code}}" is applied!</h6>
-                    <a href="{% url 'cancel_discount' %}">Click to cancel the discount</a>
+                    <input type="submit"
+                                   class="btn btn-info"
+                                   value="Click to cancel the discount"
+                                   formaction="{% url 'cancel_discount' %}">
                     {% endif %}
 
                 </form>

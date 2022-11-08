@@ -18,9 +18,5 @@ urlpatterns = [
         export_csv_detail,
         name="product_detail_export_csv"
     ),
-    path(
-        'products/add-to-cart/<uuid:pk>/',
-        AddToCartView.as_view(),
-        name="add_to_cart"
-    )
+    path('products/add-to-cart/', AddToCartView.as_view(), name="add_to_cart"),
 ]
