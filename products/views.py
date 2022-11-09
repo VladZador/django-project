@@ -2,6 +2,7 @@ import csv
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -20,8 +21,7 @@ class ProductDetailView(DetailView):
     model = Product
 
 
-@method_decorator(login_required, name='dispatch')
-class AddToCartView(RedirectView):
+class AddToCartView(LoginRequiredMixin, RedirectView):
     url = reverse_lazy("product_list")
 
     def get_order_object(self):
@@ -37,8 +37,7 @@ class AddToCartView(RedirectView):
         return self.get(request, *args, **kwargs)
 
 
-@method_decorator(login_required, name='dispatch')
-class UpdateStarredStatusView(RedirectView):
+class UpdateStarredStatusView(LoginRequiredMixin, RedirectView):
     url = reverse_lazy("product_list")
 
     def post(self, request, *args, **kwargs):
@@ -46,6 +45,14 @@ class UpdateStarredStatusView(RedirectView):
         if form.is_valid():
             form.save(kwargs["action"])
         return self.get(request, *args, **kwargs)
+
+
+class FavouriteProductsView(LoginRequiredMixin, ListView):
+    context_object_name = "favorite_products_list"
+    template_name = "products/favorite_products.html"
+
+    def get_queryset(self):
+        return Product.objects.filter(user=self.request.user)
 
 
 @login_required

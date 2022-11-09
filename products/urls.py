@@ -2,7 +2,7 @@ from django.urls import path, re_path
 
 from .views import (
     ProductListView, ProductDetailView, export_csv, export_csv_detail,
-    AddToCartView, UpdateStarredStatusView
+    AddToCartView, UpdateStarredStatusView, FavouriteProductsView
 )
 
 urlpatterns = [
@@ -24,4 +24,5 @@ urlpatterns = [
         UpdateStarredStatusView.as_view(),
         name="star_product"
     ),
+    path("products/favorite/", FavouriteProductsView.as_view(), name="favorite_products"),
 ]
