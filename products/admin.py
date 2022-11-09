@@ -86,6 +86,7 @@ class ProductAdmin(ThumbnailAdminMixin, admin.ModelAdmin):
                             description=product_data["description"],
                             category=category,
                             price=product_data["price"],
+                            currency=product_data["currency"],
                             sku=product_data["sku"],
                         )
                         product.image.save(

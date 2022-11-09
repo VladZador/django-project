@@ -13,27 +13,34 @@
                   <h5 class="title p-3">{{product.name}}</h5>
                   <p class="text">Category: {{product.category}}</p>
                   <p class="text">{{product.description}}</p>
-                  <p class="text">Price: {{product.price}} UAH</p>
-                  <p class="text">sku: {{product.sku}}</p>
-                    <form method="post" action="{% url 'add_to_cart' %}">
-                        {% csrf_token %}
-                        <input type="hidden" value="{{ product.id }}" name="product">
-                        <input type="submit" class="btn btn-primary" value="Add to cart">
-                    </form>
+                  <p class="text">Price: {{product.price}} {{product.get_currency_display}}</p>
+                        <div class="row justify-content-between">
+                              <div class="col-2">
+                                <form method="post" action="{% url 'add_to_cart' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" value="{{ product.id }}" name="product">
+                                    <input type="submit" class="btn btn-primary" value="Add to cart">
+                                </form>
+                              </div>
 
-                    {% if request.user in product.user_set.all %}
-                        <form method="post" action="{% url 'star_product' 'remove' %}">
-                            {% csrf_token %}
-                            <input type="hidden" value="{{ product.id }}" name="product">
-                            <input type="submit" class="btn btn-success" value="Remove from favorites">
-                        </form>
-                    {% else %}
-                        <form method="post" action="{% url 'star_product' 'add' %}">
-                            {% csrf_token %}
-                            <input type="hidden" value="{{ product.id }}" name="product">
-                            <input type="submit" class="btn btn-outline-success" value="Add to favorites">
-                        </form>
-                    {% endif %}
+                              <div class="col-3">
+                              {% if request.user in product.user_set.all %}
+                                <form method="post" action="{% url 'star_product' 'remove' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" name="product" value="{{ product.id }}">
+                                        <img width="32" class="star" src="{% static 'images/star.jpg' %}" alt="Star">
+                                    </button>
+                                </form>
+                              {% else %}
+                                <form method="post" action="{% url 'star_product' 'add' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" name="product" value="{{ product.id }}">
+                                        <img width="32" class="star" src="{% static 'images/no_star.jpg' %}" alt="No-star">
+                                    </button>
+                                </form>
+                              {% endif %}
+                              </div>
+                        </div>
                 </div>
                 <div class="col p-3 d-md-flex justify-content-md-end">
                     <a href="{% url 'product_detail_export_csv' product.id %}">Export product info (csv)</a>

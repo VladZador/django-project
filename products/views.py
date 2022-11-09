@@ -37,13 +37,15 @@ class AddToCartView(LoginRequiredMixin, RedirectView):
 
 
 class UpdateStarredStatusView(LoginRequiredMixin, RedirectView):
-    url = reverse_lazy("product_list")
 
     def post(self, request, *args, **kwargs):
         form = UpdateStarredStatusForm(request.POST, user=request.user)
         if form.is_valid():
             form.save(kwargs["action"])
         return self.get(request, *args, **kwargs)
+
+    def get_redirect_url(self, *args, **kwargs):
+        return self.request.headers.get("Referer")
 
 
 class FavouriteProductsView(LoginRequiredMixin, ListView):
@@ -87,16 +89,22 @@ def export_csv_detail(request, *args, **kwargs):
     return response
 
 
-# todo: add currency
 def _create_csv_writer(response):
     """Creates a csv writer object with the product info headers."""
-    fieldnames = ["name", "description", "category", "price", "sku", "image"]
+    fieldnames = [
+        "name",
+        "description",
+        "category",
+        "price",
+        "currency",
+        "sku",
+        "image",
+    ]
     writer = csv.DictWriter(response, fieldnames=fieldnames)
     writer.writeheader()
     return writer
 
 
-# todo: add currency
 def _write_csv_row(writer, product_instance):
     """Adds parameters to be passed to the csv writer object."""
     writer.writerow(
@@ -105,6 +113,7 @@ def _write_csv_row(writer, product_instance):
             "description": product_instance.description,
             "category": product_instance.category,
             "price": product_instance.price,
+            "currency": product_instance.currency,
             "sku": product_instance.sku,
             "image": settings.DOMAIN + product_instance.image.url,
         }

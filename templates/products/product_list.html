@@ -15,14 +15,17 @@
                       <div class="card-body">
                         <h5 class="card-title">{{product.name}}</h5>
                         <p class="card-text">{{product.description}}</p>
-                          <p class="card-text">{{product.price}}</p>
-                          <div class="row">
-                            <form method="post" action="{% url 'add_to_cart' %}">
-                                {% csrf_token %}
-                                <input type="hidden" value="{{ product.id }}" name="product">
-                                <input type="submit" class="btn btn-primary" value="Add to cart">
-                            </form>
+                          <p class="card-text">{{product.price}} {{product.get_currency_display}}</p>
+                          <div class="row justify-content-between">
+                              <div class="col-2">
+                                <form method="post" action="{% url 'add_to_cart' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" value="{{ product.id }}" name="product">
+                                    <input type="submit" class="btn btn-primary" value="Add to cart">
+                                </form>
+                              </div>
 
+                              <div class="col-3">
                               {% if request.user in product.user_set.all %}
                                 <form method="post" action="{% url 'star_product' 'remove' %}">
                                     {% csrf_token %}
@@ -38,6 +41,7 @@
                                     </button>
                                 </form>
                               {% endif %}
+                              </div>
                           </div>
                       </div>
                     </div>
