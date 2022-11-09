@@ -2,5 +2,8 @@
     width: 48px;
 }
 .product-image{
-    max-height: 100px;
+    max-height: 50px;
+}
+.star{
+    width: 32px;
 }

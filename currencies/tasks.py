@@ -69,6 +69,9 @@ class CurrenciesCreator:
 
 @app.task
 def get_currencies_from_bank(bank_name: str):
+    """
+    :param bank_name: "privat", "mono" or "national"
+    """
     client = CurrencyClient()
     currency_list = getattr(client, bank_name).get_currency()
     currency_history_list = []

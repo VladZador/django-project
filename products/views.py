@@ -2,13 +2,13 @@ import csv
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.urls import reverse_lazy
-from django.utils.decorators import method_decorator
 from django.views.generic import ListView, DetailView, RedirectView
 
 from orders.models import Order
-from .forms import AddToCartForm
+from .forms import AddToCartForm, UpdateStarredStatusForm
 from .models import Product
 
 
@@ -20,8 +20,7 @@ class ProductDetailView(DetailView):
     model = Product
 
 
-@method_decorator(login_required, name='dispatch')
-class AddToCartView(RedirectView):
+class AddToCartView(LoginRequiredMixin, RedirectView):
     url = reverse_lazy("product_list")
 
     def get_order_object(self):
@@ -35,6 +34,24 @@ class AddToCartView(RedirectView):
         if form.is_valid():
             form.save()
         return self.get(request, *args, **kwargs)
+
+
+class UpdateStarredStatusView(LoginRequiredMixin, RedirectView):
+    url = reverse_lazy("product_list")
+
+    def post(self, request, *args, **kwargs):
+        form = UpdateStarredStatusForm(request.POST, user=request.user)
+        if form.is_valid():
+            form.save(kwargs["action"])
+        return self.get(request, *args, **kwargs)
+
+
+class FavouriteProductsView(LoginRequiredMixin, ListView):
+    context_object_name = "favorite_products_list"
+    template_name = "products/favorite_products.html"
+
+    def get_queryset(self):
+        return Product.objects.filter(user=self.request.user)
 
 
 @login_required
@@ -70,6 +87,7 @@ def export_csv_detail(request, *args, **kwargs):
     return response
 
 
+# todo: add currency
 def _create_csv_writer(response):
     """Creates a csv writer object with the product info headers."""
     fieldnames = ["name", "description", "category", "price", "sku", "image"]
@@ -78,6 +96,7 @@ def _create_csv_writer(response):
     return writer
 
 
+# todo: add currency
 def _write_csv_row(writer, product_instance):
     """Adds parameters to be passed to the csv writer object."""
     writer.writerow(
