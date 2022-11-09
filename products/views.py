@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import ListView, DetailView, RedirectView
 
 from orders.models import Order
-from .forms import AddToCartForm
+from .forms import AddToCartForm, UpdateStarredStatusForm
 from .models import Product
 
 
@@ -34,6 +34,17 @@ class AddToCartView(RedirectView):
         form = AddToCartForm(request.POST,  instance=self.get_order_object())
         if form.is_valid():
             form.save()
+        return self.get(request, *args, **kwargs)
+
+
+@method_decorator(login_required, name='dispatch')
+class UpdateStarredStatusView(RedirectView):
+    url = reverse_lazy("product_list")
+
+    def post(self, request, *args, **kwargs):
+        form = UpdateStarredStatusForm(request.POST, user=request.user)
+        if form.is_valid():
+            form.save(kwargs["action"])
         return self.get(request, *args, **kwargs)
 
 

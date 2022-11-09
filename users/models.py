@@ -7,6 +7,8 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from products.models import Product
+
 
 class CustomUserManager(UserManager):
 
@@ -69,6 +71,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         ),
     )
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+
+    starred_products = models.ManyToManyField(Product)
 
     objects = CustomUserManager()
 
