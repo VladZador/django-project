@@ -26,4 +26,6 @@ class UpdateStarredStatusForm(ProductFormMixin):
         self.user = user
 
     def save(self, action):
-        getattr(self.user.starred_products, action)(self.cleaned_data["product"])
+        getattr(
+            self.user.starred_products, action
+        )(self.cleaned_data["product"])

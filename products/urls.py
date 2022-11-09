@@ -24,5 +24,9 @@ urlpatterns = [
         UpdateStarredStatusView.as_view(),
         name="star_product"
     ),
-    path("products/favorite/", FavouriteProductsView.as_view(), name="favorite_products"),
+    path(
+        "products/favorite/",
+        FavouriteProductsView.as_view(),
+        name="favorite_products"
+    ),
 ]
