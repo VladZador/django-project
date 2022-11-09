@@ -70,6 +70,7 @@ def export_csv_detail(request, *args, **kwargs):
     return response
 
 
+# todo: add currency
 def _create_csv_writer(response):
     """Creates a csv writer object with the product info headers."""
     fieldnames = ["name", "description", "category", "price", "sku", "image"]
@@ -78,6 +79,7 @@ def _create_csv_writer(response):
     return writer
 
 
+# todo: add currency
 def _write_csv_row(writer, product_instance):
     """Adds parameters to be passed to the csv writer object."""
     writer.writerow(
