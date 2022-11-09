@@ -1,51 +1,29 @@
-from django.core.exceptions import ValidationError
-from django.forms import Form, FileField, UUIDField
-from django.utils.translation import gettext_lazy as _
+from django.forms import Form, FileField
 
-from .models import Product
+from .mixins import ProductFormMixin
 
 
 class CsvImportForm(Form):
     csv_import = FileField()
 
 
-class AddToCartForm(Form):
-    product = UUIDField()
+class AddToCartForm(ProductFormMixin):
 
     def __init__(self, *args, **kwargs):
         instance = kwargs.pop("instance")
         super().__init__(*args, **kwargs)
         self.instance = instance
 
-    def clean_product(self):
-        try:
-            product = Product.objects.get(id=self.cleaned_data['product'])
-        except Product.DoesNotExist:
-            raise ValidationError(_(
-                "Sorry, there is no product with this uuid"
-            ))
-        return product
-
     def save(self):
         self.instance.products.add(self.cleaned_data["product"])
 
 
-class UpdateStarredStatusForm(Form):
-    product = UUIDField()
+class UpdateStarredStatusForm(ProductFormMixin):
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self.user = user
-
-    def clean_product(self):
-        try:
-            product = Product.objects.get(id=self.cleaned_data['product'])
-        except Product.DoesNotExist:
-            raise ValidationError(_(
-                "Sorry, there is no product with this uuid"
-            ))
-        return product
 
     def save(self, action):
         getattr(self.user.starred_products, action)(self.cleaned_data["product"])

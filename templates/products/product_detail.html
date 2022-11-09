@@ -21,6 +21,19 @@
                         <input type="submit" class="btn btn-primary" value="Add to cart">
                     </form>
 
+                    {% if request.user in product.user_set.all %}
+                        <form method="post" action="{% url 'star_product' 'remove' %}">
+                            {% csrf_token %}
+                            <input type="hidden" value="{{ product.id }}" name="product">
+                            <input type="submit" class="btn btn-success" value="Remove from favorites">
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'star_product' 'add' %}">
+                            {% csrf_token %}
+                            <input type="hidden" value="{{ product.id }}" name="product">
+                            <input type="submit" class="btn btn-outline-success" value="Add to favorites">
+                        </form>
+                    {% endif %}
                 </div>
                 <div class="col p-3 d-md-flex justify-content-md-end">
                     <a href="{% url 'product_detail_export_csv' product.id %}">Export product info (csv)</a>

@@ -16,17 +16,27 @@
                         <h5 class="card-title">{{product.name}}</h5>
                         <p class="card-text">{{product.description}}</p>
                           <p class="card-text">{{product.price}}</p>
+                          <div class="row">
                             <form method="post" action="{% url 'add_to_cart' %}">
                                 {% csrf_token %}
                                 <input type="hidden" value="{{ product.id }}" name="product">
                                 <input type="submit" class="btn btn-primary" value="Add to cart">
                             </form>
 
-                            <form method="post" action="{% url 'star_product' 'add' %}">
-                                {% csrf_token %}
-                                <input type="hidden" value="{{ product.id }}" name="product">
-                                <input type="submit" class="btn btn-success" value="Add to favorites">
-                            </form>
+                              {% if request.user in product.user_set.all %}
+                                <form method="post" action="{% url 'star_product' 'remove' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" value="{{ product.id }}" name="product">
+                                    <input type="submit" class="btn btn-success" value="Remove from favorites">
+                                </form>
+                              {% else %}
+                                <form method="post" action="{% url 'star_product' 'add' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" value="{{ product.id }}" name="product">
+                                    <input type="submit" class="btn btn-outline-success" value="Add to favorites">
+                                </form>
+                              {% endif %}
+                          </div>
                       </div>
                     </div>
                   </div>
