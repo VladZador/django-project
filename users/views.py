@@ -18,6 +18,12 @@ class SignupView(FormView):
     def form_valid(self, form):
         """
         Extends the basic function by log in a newly registered user.
+        Since multiple authentication backends are configured, the specified
+        `backend` argument must be provided to the login() function.
         """
-        login(self.request, form.save())
+        login(
+            self.request,
+            form.save(),
+            backend='django.contrib.auth.backends.ModelBackend',
+        )
         return super().form_valid(form)
