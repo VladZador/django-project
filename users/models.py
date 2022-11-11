@@ -54,7 +54,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         validators=[EmailValidator]
     )
-    phone = models.CharField(_('phone'), max_length=32, blank=True)
     is_staff = models.BooleanField(
         _('staff status'),
         default=False,
@@ -71,6 +70,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         ),
     )
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+    phone = models.CharField(_('phone'), max_length=32, blank=True)
+    is_phone_valid = models.BooleanField(default=False)
 
     starred_products = models.ManyToManyField(Product)
 

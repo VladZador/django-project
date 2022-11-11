@@ -1,4 +1,11 @@
-# from django.contrib import admin
+from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
 
-# Register your models here.
-# todo: add user to the admin page
+User = get_user_model()
+
+
+@admin.register(User)
+class UserAdmin(AuthUserAdmin):
+    ordering = []
+    list_display = ("email", )
