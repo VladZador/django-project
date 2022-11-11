@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.forms import (
     AuthenticationForm, UserCreationForm, UsernameField
 )
-
 from django.core.exceptions import ValidationError
 from django import forms
 from django.utils.translation import gettext_lazy as _
@@ -53,5 +52,11 @@ class RegistrationForm(UserCreationForm):
     """
     class Meta:
         model = get_user_model()
-        fields = ("email",)
-        field_classes = {'email': UsernameField}
+        fields = ("email", "phone")
+        field_classes = {
+            'email': UsernameField,
+            'phone': UsernameField,
+        }
+        help_texts = {
+            'phone': _("Optional"),
+        }
