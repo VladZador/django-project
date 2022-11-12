@@ -44,11 +44,16 @@ class UpdateStarredStatusView(LoginRequiredMixin, RedirectView):
         form = UpdateStarredStatusForm(request.POST, user=request.user)
         if form.is_valid():
             form.save(kwargs["action"])
-            messages.info(
-                self.request,
-                "Product is added to (or removed from) "
-                "your favorite products list!"
-            )
+            if kwargs["action"] == "add":
+                messages.info(
+                    self.request,
+                    "Product is added to your favorite products list!",
+                )
+            else:
+                messages.info(
+                    self.request,
+                    "Product is removed from your favorite products list",
+                )
         return self.get(request, *args, **kwargs)
 
     def get_redirect_url(self, *args, **kwargs):
