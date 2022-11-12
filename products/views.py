@@ -1,6 +1,7 @@
 import csv
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
@@ -33,6 +34,7 @@ class AddToCartView(LoginRequiredMixin, RedirectView):
         form = AddToCartForm(request.POST,  instance=self.get_order_object())
         if form.is_valid():
             form.save()
+            messages.success(self.request, "Product added to your cart!")
         return self.get(request, *args, **kwargs)
 
 
@@ -42,6 +44,11 @@ class UpdateStarredStatusView(LoginRequiredMixin, RedirectView):
         form = UpdateStarredStatusForm(request.POST, user=request.user)
         if form.is_valid():
             form.save(kwargs["action"])
+            messages.info(
+                self.request,
+                "Product is added to (or removed from) "
+                "your favorite products list!"
+            )
         return self.get(request, *args, **kwargs)
 
     def get_redirect_url(self, *args, **kwargs):
@@ -49,13 +56,15 @@ class UpdateStarredStatusView(LoginRequiredMixin, RedirectView):
 
 
 class FavouriteProductsView(LoginRequiredMixin, ListView):
+    model = Product
     context_object_name = "favorite_products_list"
     template_name = "products/favorite_products.html"
 
     # todo: check if I can use "user.starred_products.all()" queryset.
     #  Or maybe change my view and don't use ListView?
     def get_queryset(self):
-        return Product.objects.filter(user=self.request.user)
+        breakpoint()
+        return self.request.user.starred_products.all()
 
 
 @login_required

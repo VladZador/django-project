@@ -57,6 +57,3 @@ class RegistrationForm(UserCreationForm):
             'email': UsernameField,
             'phone': UsernameField,
         }
-        help_texts = {
-            'phone': _("Optional"),
-        }

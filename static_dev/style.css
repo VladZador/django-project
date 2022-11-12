@@ -7,3 +7,10 @@
 .star{
     width: 32px;
 }
+ul.messages{
+    display: inline-block;
+    position: absolute;
+    top: 5%;
+    right: 5%;
+    z-index: 9;
+}
