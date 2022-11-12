@@ -21,3 +21,7 @@ class FeedbackModelForm(forms.ModelForm):
         :return: string with cleaned text
         """
         return re.sub("[^A-Za-z0-9-,.'\"!? ]", "", self.cleaned_data["text"])
+
+    def save(self, commit=True):
+        super().save()
+        self.instance.delete_cache()

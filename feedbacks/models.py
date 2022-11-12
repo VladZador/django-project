@@ -19,3 +19,7 @@ class Feedback(PKMixin):
     @classmethod
     def get_feedbacks_cache(cls):
         return cache.get_or_set("feedbacks", Feedback.objects.all())
+
+    @classmethod
+    def delete_cache(cls):
+        return cache.delete("feedbacks")

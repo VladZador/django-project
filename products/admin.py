@@ -100,5 +100,6 @@ class ProductAdmin(ThumbnailAdminMixin, admin.ModelAdmin):
                         break
         if product_list:
             Product.objects.bulk_create(product_list)
+            messages.success(request, "Data has been imported")
         else:
-            messages.error(request, "Data is not imported")
+            messages.error(request, "Data has not been imported")

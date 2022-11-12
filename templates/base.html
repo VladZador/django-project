@@ -13,68 +13,19 @@
 </head>
 <body>
 
+    {% block messages %}
+        {% include "parts/messages.html" %}
+    {% endblock messages %}
+
     {% block header %}
-    <nav class="navbar navbar-expand-lg bg-light">
-        <div class="container-fluid" >
-            <a class="navbar-brand" href="{% url 'main' %}">
-                <img class="logo" src="{% static 'images/logo.png' %}">
-            </a>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav" >
-                    <li class="nav-item">
-                        <a class="nav-link active"
-                           href="{% url 'product_list' %}">Products</a>
-                    </li>
-
-                    {% if request.user.is_authenticated%}
-                    <li class="nav-item">
-                        <a class="nav-link active"
-                           href="{% url 'cart' %}">Cart</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active"
-                           href="{% url 'favorite_products' %}">Favorite</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active"
-                           href="{% url 'feedbacks' %}">Feedbacks</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page"
-                           href="{% url 'logout' %}">Logout</a>
-                    </li>
-
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page"
-                           href="{% url 'login' %}">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page"
-                           href="{% url 'signup' %}">Sign up</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
+        {% include "parts/header.html" %}
     {% endblock header %}
 
     {% block content %}
     {% endblock content %}
 
     {% block footer %}
-    <footer>
-        <section class="base text-bg-light p-3" >
-        <div class="container text-center">
-            <div class="row align-items-end">
-                <div class="col-lg">
-                    My store, 2022
-                </div>
-            </div>
-        </div>
-        </section>
-    </footer>
+        {% include "parts/footer.html" %}
     {% endblock footer %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
