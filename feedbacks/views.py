@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
@@ -12,6 +13,7 @@ def feedbacks_view(request, *args, **kwargs):
         form = FeedbackModelForm(user=user, data=request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, "Thank you for your feedback!")
     else:
         form = FeedbackModelForm(user=user)
     context = {

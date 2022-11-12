@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -49,6 +50,7 @@ class DiscountAddView(CurrentOrderMixin, RedirectView):
         form = DiscountInputForm(request.POST, instance=self.get_object())
         if form.is_valid():
             form.save()
+            messages.success(request, "Discount applied!")
         return self.get(request, *args, **kwargs)
 
 
@@ -60,6 +62,7 @@ class DiscountCancelView(CurrentOrderMixin, RedirectView):
         form = DiscountCancelForm(request.POST, instance=self.get_object())
         if form.is_valid():
             form.save()
+            messages.info(request, "Discount not applied")
         return self.get(request, *args, **kwargs)
 
 
@@ -105,4 +108,8 @@ class OrderPaymentView(CurrentOrderMixin, RedirectView):
         form = OrderPaymentForm(request.POST, instance=self.get_object())
         if form.is_valid():
             form.save()
+            messages.success(
+                request,
+                "Your order has been successfully processed!"
+            )
         return self.get(request, *args, **kwargs)
