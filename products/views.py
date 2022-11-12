@@ -63,7 +63,6 @@ class FavouriteProductsView(LoginRequiredMixin, ListView):
     # todo: check if I can use "user.starred_products.all()" queryset.
     #  Or maybe change my view and don't use ListView?
     def get_queryset(self):
-        breakpoint()
         return self.request.user.starred_products.all()
 
 
@@ -79,6 +78,7 @@ def export_csv(request, *args, **kwargs):
     writer = _create_csv_writer(response)
     for product in Product.objects.iterator():
         _write_csv_row(writer, product)
+    messages.success(request, "csv file created!")
     return response
 
 
@@ -97,6 +97,7 @@ def export_csv_detail(request, *args, **kwargs):
     writer = _create_csv_writer(response)
     product = Product.objects.get(pk=kwargs["pk"])
     _write_csv_row(writer, product)
+    messages.success(request, "csv file created!")
     return response
 
 
