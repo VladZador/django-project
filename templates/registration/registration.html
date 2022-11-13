@@ -2,18 +2,21 @@
 {% load static %}
 
 {% block content %}
-<h1>Registration</h1>
-  <div>
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      {% for field in form %}
-        <label>{{ field.label }}</label>
-        {{field}}
-      {% endfor %}
-      <input type="submit" value="Registration">
-    </form>
-    <p>
-      {{ form.errors }}
-    </p>
-  </div>
+
+<section class="registration">
+    <div class="container">
+        <div class="row">
+            <div class="col col-lg-4 offset-lg-4 mb-3">
+                <h1>Registration</h1>
+
+                <form method="post">
+                    {% include "parts/forms/simple_form.html" with form=form %}
+                    <input class="btn btn-primary mt-3" type="submit" value="Sign up">
+                </form>
+
+            </div>
+        </div>
+    </div>
+</section>
+
 {% endblock content %}

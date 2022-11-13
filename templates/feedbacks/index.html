@@ -2,40 +2,42 @@
 {% load static %}
 
 {% block content %}
-    <h1>Feedbacks</h1>
 
-  {% for feedback in feedbacks %}
-    <p>
-      <span>Text: {{feedback.text}}</span>
-      <span>User: {{feedback.user}}</span>
-      <span>Rating: {{feedback.rating}}</span>
-    </p>
-  {% endfor %}
+<section class="feedback">
+    <div class="container">
+        <div class="row">
+            <div class="col col-lg-4 offset-lg-4 mb-3">
+                <h1>Feedbacks</h1>
 
-    <!-- For error display -->
-    {% if form.errors %}
-    {% for field in form %}
-        {% for error in field.errors %}
-            <div class="alert alert-danger">
-                <strong>{{ error|escape }}</strong>
+                <form method="post">
+                    {% include "parts/forms/simple_form.html" with form=form %}
+                    <input type="submit" value="Create Feedback" class="btn btn-primary my-2">
+                </form>
             </div>
-        {% endfor %}
-        {% endfor %}
-    {% for error in form.non_field_errors %}
-        <div class="alert alert-danger">
-            <strong>{{ error|escape }}</strong>
-        </div>
-    {% endfor %}
-    {% endif %}
 
-  <div>
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      {% for field in form %}
-        <label>{{ field.label }}</label>
-        {{field}}
-      {% endfor %}
-      <input type="submit" value="Create Feedback">
-    </form>
-  </div>
+            <div class="d-none d-lg-block col-lg-4"></div>
+              {% for feedback in feedbacks %}
+                 <div class="col-12 col-lg-4">
+                     <div class="card my-2">
+                         <div class="card-body">
+                             {% if feedback.user.get_short_name %}
+                             <p>
+                                 <span>User: {{feedback.user.get_short_name }}</span>
+                             </p>
+                             {% endif %}
+                             <p>
+                                 <span>Text: {{feedback.text}}</span>
+                             </p>
+                             <p>
+                                 <span>Rating: {{feedback.rating}}</span>
+                             </p>
+                         </div>
+                     </div>
+                 </div>
+              {% endfor %}
+        </div>
+    </div>
+</section>
+
+
 {% endblock content %}

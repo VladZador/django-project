@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="main">
+        <div class="container p-3">
+            <div class="row">
+                <div class="col">
+                    <p>Send us an email!</p>
+
+                    <p>
+                        <form method="post">
+                            {% include "parts/forms/simple_form.html" with form=form %}
+                            <input type="submit" value="Send" class="btn btn-primary my-3">
+                        </form>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock content %}

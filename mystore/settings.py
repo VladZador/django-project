@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "users",
     "main",
     "currencies",
+    "config",
     # extensions
     "django_extensions",
     "django_celery_results",
@@ -170,3 +171,15 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'users.backends.PhoneModelBackend',
 ]
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = env("EMAIL_HOST")
+EMAIL_PORT = env("EMAIL_PORT")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = env("EMAIL_USE_TLS")
+
+ADMINS = [("Vlad", env("ADMIN_EMAIL"))]
+MANAGERS = ADMINS
+EMAIL_SUBJECT_PREFIX = "MyStore - "
+SERVER_EMAIL = EMAIL_HOST_USER
