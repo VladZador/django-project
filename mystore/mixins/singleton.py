@@ -25,6 +25,11 @@ class SingletonModel(models.Model):
 
     @classmethod
     def load(cls):
+        """
+        Loads instance from db or creates the instance, saves and returns it.
+
+        :return: class instance
+        """
         if cache.get(cls.__name__) is None:
             obj, created = cls.objects.get_or_create(pk=1)
             if not created:
