@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "users",
     "main",
     "currencies",
+    "config",
     # extensions
     "django_extensions",
     "django_celery_results",
