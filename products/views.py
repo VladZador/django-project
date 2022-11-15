@@ -71,7 +71,8 @@ class FavouriteProductsView(LoginRequiredMixin, ListView):
     template_name = "products/favorite_products.html"
 
     def get_queryset(self):
-        return self.request.user.starred_products.all().prefetch_related("user_set__starred_products")
+        return self.request.user.starred_products.all()\
+            .prefetch_related("user_set__starred_products")
 
 
 @login_required
