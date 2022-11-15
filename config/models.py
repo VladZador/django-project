@@ -1,8 +1,8 @@
 from django.db import models
+from django.conf import settings
 
 from mystore.mixins.singleton import SingletonModel
-from mystore.settings import env
 
 
 class Config(SingletonModel):
-    contact_form_email = models.EmailField(default=env("ADMIN_EMAIL"))
+    contact_form_email = models.EmailField(default=settings.ADMIN_EMAIL)
