@@ -38,8 +38,8 @@ class Order(PKMixin):
         """Calculates the total price of the order without the discount."""
         total_amount = 0
         for product_relation in self.get_products_through().iterator():
-            total_amount += product_relation.total_price\
-                            * product_relation.product.exchange_rate
+            total_amount += product_relation.quantity\
+                            * product_relation.product.exchange_price
         return round(total_amount, 2)
 
     def calculate_with_discount(self):

@@ -16,6 +16,11 @@ from .models import Product
 class ProductListView(ListView):
     model = Product
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.prefetch_related("user_set__starred_products")
+        return qs
+
 
 class ProductDetailView(DetailView):
     model = Product
@@ -65,10 +70,8 @@ class FavouriteProductsView(LoginRequiredMixin, ListView):
     context_object_name = "favorite_products_list"
     template_name = "products/favorite_products.html"
 
-    # todo: check if I can use "user.starred_products.all()" queryset.
-    #  Or maybe change my view and don't use ListView?
     def get_queryset(self):
-        return self.request.user.starred_products.all()
+        return self.request.user.starred_products.all().prefetch_related("user_set__starred_products")
 
 
 @login_required
