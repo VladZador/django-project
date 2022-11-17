@@ -23,6 +23,7 @@ def test_contact_us_page(client, faker):
     }
     response = client.post(reverse("contact_us"), data=data)
     assert response.status_code == 200
+    assert b"This field is required" in response.content
     assert not mail.outbox
 
     # Wrong form input: empty text field
@@ -32,6 +33,17 @@ def test_contact_us_page(client, faker):
     }
     response = client.post(reverse("contact_us"), data=data)
     assert response.status_code == 200
+    assert b"This field is required" in response.content
+    assert not mail.outbox
+
+    # Wrong form input: empty fields
+    data = {
+        "email": "",
+        "text": "",
+    }
+    response = client.post(reverse("contact_us"), data=data)
+    assert response.status_code == 200
+    assert response.content.count(b"This field is required") == 2
     assert not mail.outbox
 
     # Wrong form input: Not an email in the email field
@@ -41,6 +53,7 @@ def test_contact_us_page(client, faker):
     }
     response = client.post(reverse("contact_us"), data=data)
     assert response.status_code == 200
+    assert b"Enter a valid email address" in response.content
     assert not mail.outbox
 
     # Correct form input
