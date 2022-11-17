@@ -1,6 +1,8 @@
 import pytest
 from faker import Faker
 
+from products.models import Product, Category
+
 fake = Faker()
 
 
@@ -17,3 +19,17 @@ def enable_db_access_for_all_tests(db):
     yield
     del __builtins__['pp']
     # code after tests run
+
+
+@pytest.fixture(scope='function')
+def product(db):
+    category, _ = Category.objects.get_or_create(name="Test category")
+    product, _ = Product.objects.get_or_create(
+        name="Lorem",
+        description="Ipsum",
+        category=category,
+        price=20.00,
+        currency=980,
+        sku="dolor"
+    )
+    yield product

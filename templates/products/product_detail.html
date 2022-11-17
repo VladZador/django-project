@@ -6,9 +6,11 @@
 <section class="product">
         <div class="container">
             <div class="row">
+                {% if product.image %}
                 <div class="col-4 p-3 ">
                   <img src={{product.image.url}} class="card-img-top">
                 </div>
+                {% endif %}
                 <div class="col-8 p-3">
                   <h5 class="title p-3">{{product.name}}</h5>
                   <p class="text">Category: {{product.category}}</p>
