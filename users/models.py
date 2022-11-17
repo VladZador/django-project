@@ -73,7 +73,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(_('phone'), max_length=32, blank=True)
     is_phone_valid = models.BooleanField(default=False)
 
-    starred_products = models.ManyToManyField(Product)
+    favorite_products = models.ManyToManyField(Product)
 
     objects = CustomUserManager()
 

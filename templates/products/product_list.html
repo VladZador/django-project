@@ -34,19 +34,9 @@
 
                               <div class="col-3">
                               {% if request.user in product.user_set.all %}
-                                <form method="post" action="{% url 'star_product' 'remove' %}">
-                                    {% csrf_token %}
-                                    <button type="submit" name="product" value="{{ product.id }}">
-                                        <img width="32" class="star" src="{% static 'images/star.jpg' %}" alt="Star">
-                                    </button>
-                                </form>
+                                {% include "parts/forms/remove_from_favorites.html" with product_id=product.id %}
                               {% else %}
-                                <form method="post" action="{% url 'star_product' 'add' %}">
-                                    {% csrf_token %}
-                                    <button type="submit" name="product" value="{{ product.id }}">
-                                        <img width="32" class="star" src="{% static 'images/no_star.jpg' %}" alt="No-star">
-                                    </button>
-                                </form>
+                                {% include "parts/forms/add_to_favorites.html" with product_id=product.id %}
                               {% endif %}
                               </div>
                             </div>

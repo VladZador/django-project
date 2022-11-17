@@ -18,7 +18,7 @@ class AddToCartForm(ProductFormMixin):
         self.instance.products.add(self.cleaned_data["product"])
 
 
-class UpdateStarredStatusForm(ProductFormMixin):
+class UpdateFavoriteProductsForm(ProductFormMixin):
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user")
@@ -27,5 +27,5 @@ class UpdateStarredStatusForm(ProductFormMixin):
 
     def save(self, action):
         getattr(
-            self.user.starred_products, action
+            self.user.favorite_products, action
         )(self.cleaned_data["product"])

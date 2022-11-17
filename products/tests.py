@@ -1,24 +1,86 @@
 from django.urls import reverse
 
 
-def test_products_page_as_unregistered_user(client, product):
+def test_products_page_with_no_products(client):
     # Open page
     response = client.get(reverse("product_list"))
+    assert response.status_code == 200
+    assert b"Sorry, the product list is currently empty" in response.content
+
+
+def test_product_list_page_as_unregistered_user(client, product):
+    # Open page
+    response = client.get(reverse("product_list"))
+
+    # Since both "product_list" and "product_detail" should have similar content display,
+    # I have separated the tests into a function with common functionality.
+    _check_product_content(product, response)
+
+    # Since both "product_list" and "product_detail" have the same views for processing
+    # actions with products, I have separated the tests into a function with common functionality.
+    _check_product_post_method(client, product)
+
+
+def _check_product_content(product, response):
     assert response.status_code == 200
     assert product.name.encode("utf-8") in response.content
     assert product.description.encode("utf-8") in response.content
 
+
+def _check_product_post_method(client, product):
     # Add product to the cart
-    add_to_cart_url = reverse("add_to_cart")
-    data = {"product": product.id}
-    response = client.post(add_to_cart_url, data=data, follow=True)
-    assert response.status_code == 200
-    assert any(i[0] == reverse("login") + f"?next={add_to_cart_url}" for i in response.redirect_chain)
+    url = reverse("add_to_cart")
+    _check_product_redirection(client, product, url)
 
     # Add product to the favorites
-    add_to_favorites_url = reverse("star_product", kwargs={"action": "add"})
+    url = reverse("update_favorite_products", kwargs={"action": "add"})
+    _check_product_redirection(client, product, url)
+
+    # Remove product from the favorites. It's not reachable from the page, but should be covered.
+    url = reverse("update_favorite_products", kwargs={"action": "remove"})
+    _check_product_redirection(client, product, url)
+
+
+def _check_product_redirection(client, product, url):
     data = {"product": product.id}
-    response = client.post(add_to_favorites_url, data=data, follow=True)
+    response = client.post(url, data=data, follow=True)
     assert response.status_code == 200
-    assert any(i[0] == reverse("login") + f"?next={add_to_favorites_url}" for i in response.redirect_chain)
-    breakpoint()
+    assert any(i[0] == reverse("login") + f"?next={url}" for i in response.redirect_chain)
+
+
+def test_product_detail_page_wrong_uuid(client, faker):
+    response = client.get(reverse("product_detail", kwargs={"pk": faker.uuid4()}))
+    assert response.status_code == 404
+
+
+def test_product_detail_page_as_unregistered_user(client, product):
+    response = client.get(reverse("product_detail", kwargs={"pk": product.id}))
+
+    # Since both "product_list" and "product_detail" should have similar content display,
+    # I have separated the tests into a function with common functionality.
+    _check_product_content(product, response)
+
+    # Since both "product_list" and "product_detail" have the same views for processing
+    # actions with products, I have separated the tests into a function with common functionality.
+    _check_product_post_method(client, product)
+
+
+def test_product_list_export_csv_page_as_unregistered_user(client):
+    url = reverse("product_list_export_csv")
+    _check_redirection(client, url)
+
+
+def _check_redirection(client, url):
+    response = client.get(url, follow=True)
+    assert response.status_code == 200
+    assert any(i[0] == reverse("login") + f"?next={url}" for i in response.redirect_chain)
+
+
+def test_product_detail_export_csv_page_as_unregistered_user(client, product):
+    url = reverse("product_detail_export_csv", kwargs={"pk": product.id})
+    _check_redirection(client, url)
+
+
+def test_favorite_products_page_as_unregistered_user(client):
+    url = reverse("favorite_products")
+    _check_redirection(client, url)

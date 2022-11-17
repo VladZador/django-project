@@ -2,7 +2,7 @@ from django.urls import path, re_path
 
 from .views import (
     ProductListView, ProductDetailView, export_csv, export_csv_detail,
-    AddToCartView, UpdateStarredStatusView, FavouriteProductsView
+    AddToCartView, UpdateFavoriteProductsView, FavouriteProductsView
 )
 
 urlpatterns = [
@@ -20,9 +20,9 @@ urlpatterns = [
     ),
     path("products/add-to-cart/", AddToCartView.as_view(), name="add_to_cart"),
     re_path(
-        "products/(?P<action>add|remove)/",
-        UpdateStarredStatusView.as_view(),
-        name="star_product"
+        "products/(?P<action>add|remove)-favorite/",
+        UpdateFavoriteProductsView.as_view(),
+        name="update_favorite_products"
     ),
     path(
         "products/favorite/",

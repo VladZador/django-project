@@ -9,7 +9,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, RedirectView
 
 from orders.models import Order
-from .forms import AddToCartForm, UpdateStarredStatusForm
+from .forms import AddToCartForm, UpdateFavoriteProductsForm
 from .models import Product
 
 
@@ -18,7 +18,7 @@ class ProductListView(ListView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        qs = qs.prefetch_related("user_set__starred_products")
+        qs = qs.prefetch_related("user_set__favorite_products")
         return qs
 
 
@@ -43,10 +43,10 @@ class AddToCartView(LoginRequiredMixin, RedirectView):
         return self.get(request, *args, **kwargs)
 
 
-class UpdateStarredStatusView(LoginRequiredMixin, RedirectView):
+class UpdateFavoriteProductsView(LoginRequiredMixin, RedirectView):
 
     def post(self, request, *args, **kwargs):
-        form = UpdateStarredStatusForm(request.POST, user=request.user)
+        form = UpdateFavoriteProductsForm(request.POST, user=request.user)
         if form.is_valid():
             form.save(kwargs["action"])
             if kwargs["action"] == "add":
@@ -71,8 +71,8 @@ class FavouriteProductsView(LoginRequiredMixin, ListView):
     template_name = "products/favorite_products.html"
 
     def get_queryset(self):
-        return self.request.user.starred_products.all()\
-            .prefetch_related("user_set__starred_products")
+        return self.request.user.favorite_products.all()\
+            .prefetch_related("user_set__favorite_products")
 
 
 @login_required
