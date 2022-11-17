@@ -27,11 +27,6 @@
                                 {% include "parts/forms/add_to_cart.html" with product_id=product.id %}
                               </div>
 
-
-                              <!--todo: move this buttons below to the parts directory,
-                                    and then inherit from that template-->
-
-
                               <div class="col-3">
                               {% if request.user in product.user_set.all %}
                                 {% include "parts/forms/remove_from_favorites.html" with product_id=product.id %}

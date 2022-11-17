@@ -31,6 +31,8 @@ class ProductAdmin(ThumbnailAdminMixin, admin.ModelAdmin):
         ), ]
         return new_urls + urls
 
+    # todo: for now this view is displayed even to unregistered users!
+    #  Need to find a way to make it accessible only to admins.
     def import_csv(self, request):
         """
         Allows to upload a .csv file, extracts the data, creates and adds
