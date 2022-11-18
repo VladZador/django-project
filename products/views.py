@@ -1,16 +1,19 @@
 import csv
+from io import StringIO
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, RedirectView
 
 from orders.models import Order
-from .forms import AddToCartForm, UpdateFavoriteProductsForm
-from .models import Product
+from .forms import AddToCartForm, UpdateFavoriteProductsForm, CsvImportForm
+from .models import Product, Category
 
 
 class ProductListView(ListView):
@@ -140,3 +143,78 @@ def _write_csv_row(writer, product_instance):
         }
     )
     return writer
+
+
+@staff_member_required
+def import_products_from_csv(request):
+    """
+    Allows to upload a .csv file, extracts the data, creates and adds
+    product instances from the data to the database.
+    """
+    if request.method == "POST":
+        csv_file = request.FILES["csv_import"]
+        if not csv_file.name.endswith(".csv"):
+            messages.error(request, "File '.csv' should be uploaded")
+        else:
+            file_data = csv.DictReader(
+                StringIO(csv_file.read().decode("utf-8"))
+            )
+            _create_products_from_csv(request, file_data)
+    form = CsvImportForm()
+    context = {"form": form}
+    return render(
+        request,
+        template_name="admin/products/product/products_import_csv.html",
+        context=context)
+
+
+def _create_products_from_csv(request, file_data):
+    """
+    Creates product instances from the parsed "file_data", adds them to
+    the database. Blank image is inserted into the image field.
+    If there is no category for a passed category name in the database,
+    a new one with blank image is created.
+
+    :return: None
+    """
+    with open("static/images/blank.png", "rb") as blank_image:
+        product_list = []
+        for product_data in file_data:
+            try:
+                category = Category.objects.get(
+                    name=product_data["category"]
+                )
+            except KeyError as error:
+                messages.error(request, f"Column {error} is not found")
+            except Category.DoesNotExist:
+                category = Category(
+                    name=product_data["category"]
+                )
+                category.image.save(
+                    "images/blank_image.png",
+                    blank_image
+                )
+            finally:
+                try:
+                    product = Product(
+                        name=product_data["name"],
+                        description=product_data["description"],
+                        category=category,
+                        price=product_data["price"],
+                        currency=product_data["currency"],
+                        sku=product_data["sku"],
+                    )
+                    product.image.save(
+                        "images/blank_image.png",
+                        blank_image,
+                        save=False
+                    )
+                    product_list.append(product)
+                except KeyError as error:
+                    messages.error(request, f"Column {error} is not found")
+                    break
+    if product_list:
+        Product.objects.bulk_create(product_list)
+        messages.success(request, "Data has been imported")
+    else:
+        messages.error(request, "Data has not been imported")
