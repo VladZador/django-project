@@ -23,7 +23,11 @@ def test_contact_us_page(client, faker):
     }
     response = client.post(reverse("contact_us"), data=data)
     assert response.status_code == 200
+
+    # todo: Maybe it's better to check response.context["form"].errors rather than response.content?
+
     assert b"This field is required" in response.content
+    breakpoint()
     assert not mail.outbox
 
     # Wrong form input: empty text field

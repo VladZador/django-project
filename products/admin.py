@@ -33,6 +33,9 @@ class ProductAdmin(ThumbnailAdminMixin, admin.ModelAdmin):
 
     # todo: for now this view is displayed even to unregistered users!
     #  Need to find a way to make it accessible only to admins.
+    #  Maybe one way to do it is to make an ordinary function in the
+    #  "views.py" file, and then this function right here should contain
+    #  nothing except it returns that function from views.py.
     def import_csv(self, request):
         """
         Allows to upload a .csv file, extracts the data, creates and adds
