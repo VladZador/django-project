@@ -80,7 +80,6 @@ def test_login_user(client, faker):
     assert response.status_code == 302
 
     # Post correct phone and password into login form
-    client.get(url)
     data = {
         "phone": phone,
         "password": password,

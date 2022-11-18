@@ -21,7 +21,7 @@ def enable_db_access_for_all_tests(db):
     # code after tests run
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def product(db):
     category, _ = Category.objects.get_or_create(name="Test category")
     product, _ = Product.objects.get_or_create(
