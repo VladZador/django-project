@@ -1,9 +1,13 @@
 import pytest
 from faker import Faker
+from django.contrib.auth import get_user_model
+from django.test.client import Client
 
+from feedbacks.models import Feedback
 from products.models import Product, Category
 
 fake = Faker()
+User = get_user_model()
 
 
 @pytest.fixture(scope="session")
@@ -33,3 +37,37 @@ def product(db):
         sku="dolor"
     )
     yield product
+
+
+@pytest.fixture(scope="function")
+def feedback(db, faker, user):
+    feedback, _ = Feedback.objects.get_or_create(
+        text=faker.sentence(),
+        user=user,
+        rating=faker.pyint(min_value=1, max_value=5)
+    )
+    yield feedback
+
+
+@pytest.fixture(scope="function")
+def user(db, faker):
+    email = faker.email()
+    password = faker.password()
+
+    user, _ = User.objects.get_or_create(email=email)
+    user.set_password(password)
+    user.save()
+    yield user
+
+
+@pytest.fixture(scope="function")
+def login_user(db, faker):
+    email = faker.email()
+    password = faker.password()
+
+    user, _ = User.objects.get_or_create(email=email)
+    user.set_password(password)
+    user.save()
+    client = Client()
+    client.login(username=email, password=password)
+    yield client, user
