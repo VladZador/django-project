@@ -26,6 +26,34 @@ def enable_db_access_for_all_tests(db):
 
 
 @pytest.fixture(scope="function")
+def user_and_password(db, faker):
+    email = faker.email()
+    password = faker.password()
+    phone = faker.phone_number()
+    user = User.objects.create(
+        email=email,
+        phone=phone,
+        is_phone_valid=True
+    )
+    user.set_password(password)
+    user.save()
+    yield user, password
+
+
+@pytest.fixture(scope="function")
+def login_user(db, faker):
+    email = faker.email()
+    password = faker.password()
+
+    user, _ = User.objects.get_or_create(email=email)
+    user.set_password(password)
+    user.save()
+    client = Client()
+    client.login(username=email, password=password)
+    yield client, user
+
+
+@pytest.fixture(scope="function")
 def product(db):
     category, _ = Category.objects.get_or_create(name="Test category")
     product, _ = Product.objects.get_or_create(
@@ -40,34 +68,11 @@ def product(db):
 
 
 @pytest.fixture(scope="function")
-def feedback(db, faker, user):
+def feedback(db, faker, user_and_password):
+    user, _ = user_and_password
     feedback, _ = Feedback.objects.get_or_create(
         text=faker.sentence(),
         user=user,
         rating=faker.pyint(min_value=1, max_value=5)
     )
     yield feedback
-
-
-@pytest.fixture(scope="function")
-def user(db, faker):
-    email = faker.email()
-    password = faker.password()
-
-    user, _ = User.objects.get_or_create(email=email)
-    user.set_password(password)
-    user.save()
-    yield user
-
-
-@pytest.fixture(scope="function")
-def login_user(db, faker):
-    email = faker.email()
-    password = faker.password()
-
-    user, _ = User.objects.get_or_create(email=email)
-    user.set_password(password)
-    user.save()
-    client = Client()
-    client.login(username=email, password=password)
-    yield client, user
