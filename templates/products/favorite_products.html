@@ -9,7 +9,7 @@
             {% for product in favorite_products_list %}
               <div class="col-4">
                 <div class="card" style="width: 18rem;">
-                  {% if product.image %}
+                    {% if product.image %}
                     <a class="thumbnail p-3" href="{% url 'product_detail' product.id %}">
                         <img src={{product.image.url}} class="card-img-top">
                     </a>

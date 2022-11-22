@@ -25,9 +25,11 @@
             <tr>
                 <th scope="row">{{ forloop.counter }}</th>
                 <td>
+                    {% if product_relation.product.image %}
                     <figure class="text-center">
                         <img width="50" class="product-image" src={{product_relation.product.image.url}} >
                     </figure>
+                    {% endif %}
                 </td>
                 <td>{{product_relation.product.name}}</td>
                 <td>{{product_relation.quantity}}</td>

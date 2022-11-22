@@ -7,7 +7,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, RedirectView
 
@@ -97,7 +97,6 @@ def export_csv(request, *args, **kwargs):
     writer = _create_csv_writer(response)
     for product in Product.objects.iterator():
         _write_csv_row(writer, product)
-    messages.success(request, "csv file created!")
     return response
 
 
@@ -114,10 +113,13 @@ def export_csv_detail(request, *args, **kwargs):
         },
     )
     writer = _create_csv_writer(response)
-    product = Product.objects.get(pk=kwargs["pk"])
-    _write_csv_row(writer, product)
-    messages.success(request, "csv file created!")
-    return response
+    try:
+        product = Product.objects.get(pk=kwargs["pk"])
+        _write_csv_row(writer, product)
+        return response
+    except Product.DoesNotExist:
+        messages.error(request, "Sorry, there is no product with this uuid")
+        return redirect("product_list")
 
 
 def _create_csv_writer(response):
@@ -138,15 +140,19 @@ def _create_csv_writer(response):
 
 def _write_csv_row(writer, product_instance):
     """Adds parameters to be passed to the csv writer object."""
+    if product_instance.image:
+        image_name = settings.DOMAIN + product_instance.image.url
+    else:
+        image_name = "No image"
     writer.writerow(
         {
             "name": product_instance.name,
-            "description": product_instance.description,
+            "description": product_instance.description or "",
             "category": product_instance.category,
             "price": product_instance.price,
             "currency": product_instance.currency,
             "sku": product_instance.sku,
-            "image": settings.DOMAIN + product_instance.image.url,
+            "image": image_name,
         }
     )
     return writer
@@ -187,43 +193,31 @@ def _create_products_from_csv(request, file_data):
 
     :return: None
     """
-    # todo: Remove image adding. Without it, use get_or_create for the Category
-    with open("static/images/blank.png", "rb") as blank_image:
-        product_list = []
-        for product_data in file_data:
+    product_list = []
+    for product_data in file_data:
+        try:
+            category, _ = Category.objects.get_or_create(
+                name=product_data["category"]
+            )
+        except KeyError as error:
+            messages.error(request, f"Column {error} is not found")
+        finally:
             try:
-                category = Category.objects.get(
-                    name=product_data["category"]
-                )
-            except KeyError as error:
-                messages.error(request, f"Column {error} is not found")
-            except Category.DoesNotExist:
-                category = Category(
-                    name=product_data["category"]
-                )
-                category.image.save(
-                    "images/blank_image.png",
-                    blank_image
-                )
-            finally:
-                try:
-                    product = Product(
+                product_list.append(
+                    Product(
                         name=product_data["name"],
                         description=product_data["description"],
-                        category=category,
+                        category=Category.objects.get_or_create(
+                            name=product_data["category"]
+                        )[0],
                         price=product_data["price"],
                         currency=product_data["currency"],
                         sku=product_data["sku"],
                     )
-                    product.image.save(
-                        "images/blank_image.png",
-                        blank_image,
-                        save=False
-                    )
-                    product_list.append(product)
-                except KeyError as error:
-                    messages.error(request, f"Column {error} is not found")
-                    break
+                )
+            except KeyError as error:
+                messages.error(request, f"Column {error} is not found")
+                break
     if product_list:
         Product.objects.bulk_create(product_list)
         messages.success(request, "Data has been imported")

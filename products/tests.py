@@ -19,13 +19,11 @@ def test_product_list_page(client, product):
     assert product.description.encode("utf-8") in response.content
 
 
-def test_product_detail_page_wrong_uuid(client, faker):
-    # Open 404 page
+def test_product_detail_page(client, faker, product):
+    # Open 404 page when passing wrong uuid
     response = client.get(reverse("product_detail", kwargs={"pk": faker.uuid4()}))
     assert response.status_code == 404
 
-
-def test_product_detail_page(client, product):
     # Open "product detail" page
     response = client.get(reverse("product_detail", kwargs={"pk": product.id}))
     assert response.status_code == 200
@@ -220,14 +218,53 @@ def test_favorite_products_page_as_user(login_user, product):
     client, user = login_user
     url = reverse("favorite_products")
 
-    # Open favorite products page with no favorite products
+    # Open favorite products page when there's no favorite products for current user
     response = client.get(url)
     assert response.status_code == 200
     assert b"You haven't added any favorite product yet" in response.content
 
-    # Open favorite products page with no favorite products
+    # Open favorite products page
     user.favorite_products.add(product)
     response = client.get(url)
     assert response.status_code == 200
     # todo: Find out how to check if product is present in the query for this view
     assert product.name.encode("utf-8") in response.content
+
+
+def test_product_list_export_csv_page_as_user(login_user, product):
+    client, _ = login_user
+    url = reverse("product_list_export_csv")
+
+    # Access page
+    response = client.get(url)
+    assert response.status_code == 200
+    assert response.headers["content-type"] == 'text/csv'
+    assert response.headers["content-disposition"] == 'attachment; filename="products.csv"'
+    assert b'name,description,category,price,currency,sku,image' in response.content
+    assert f"{product.name},{product.description},{product.category},{product.price:.2f}," \
+           f"{product.currency},{product.sku},No image".encode("utf-8") \
+           in response.content
+
+
+def test_product_detail_export_csv_page_as_user(login_user, faker, product):
+    client, _ = login_user
+
+    # Redirect to "product_list" page when passing wrong uuid
+    url = reverse("product_detail_export_csv", kwargs={"pk": faker.uuid4()})
+    response = client.get(url, follow=True)
+    assert response.status_code == 200
+    assert any(i[0] == reverse("product_list") for i in response.redirect_chain)
+    assert 'Sorry, there is no product with this uuid' \
+           in [m.message for m in list(response.context['messages'])]
+
+    # Access page when passing correct uuid
+    url = reverse("product_detail_export_csv", kwargs={"pk": product.id})
+    response = client.get(url)
+    assert response.status_code == 200
+    assert response.headers["content-type"] == 'text/csv'
+    assert response.headers["content-disposition"] == \
+           f'attachment;filename="product-{product.id}.csv"'
+    assert b'name,description,category,price,currency,sku,image' in response.content
+    assert f"{product.name},{product.description},{product.category},{product.price:.2f}," \
+           f"{product.currency},{product.sku},No image".encode("utf-8") \
+           in response.content

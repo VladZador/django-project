@@ -58,7 +58,6 @@ def product(db):
     category, _ = Category.objects.get_or_create(name="Test category")
     product, _ = Product.objects.get_or_create(
         name="Lorem",
-        description="Ipsum",
         category=category,
         price=20.00,
         currency=980,
