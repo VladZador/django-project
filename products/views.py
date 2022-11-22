@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, RedirectView
@@ -49,7 +49,11 @@ class AddToCartView(LoginRequiredMixin, RedirectView):
 class UpdateFavoriteProductsView(LoginRequiredMixin, RedirectView):
 
     def post(self, request, *args, **kwargs):
-        form = UpdateFavoriteProductsForm(request.POST, user=request.user)
+        form = UpdateFavoriteProductsForm(
+            request.POST,
+            user=request.user,
+            action=kwargs["action"]
+        )
         if form.is_valid():
             form.save(kwargs["action"])
             if kwargs["action"] == "add":
@@ -65,7 +69,10 @@ class UpdateFavoriteProductsView(LoginRequiredMixin, RedirectView):
         return self.get(request, *args, **kwargs)
 
     def get_redirect_url(self, *args, **kwargs):
-        return self.request.headers.get("Referer")
+        try:
+            return self.request.headers["Referer"]
+        except KeyError:
+            return reverse_lazy("favorite_products")
 
 
 class FavouriteProductsView(LoginRequiredMixin, ListView):
@@ -160,6 +167,9 @@ def import_products_from_csv(request):
                 StringIO(csv_file.read().decode("utf-8"))
             )
             _create_products_from_csv(request, file_data)
+            return HttpResponseRedirect(
+                reverse_lazy("admin:products_product_changelist")
+            )
     form = CsvImportForm()
     context = {"form": form}
     return render(
@@ -177,6 +187,7 @@ def _create_products_from_csv(request, file_data):
 
     :return: None
     """
+    # todo: Remove image adding. Without it, use get_or_create for the Category
     with open("static/images/blank.png", "rb") as blank_image:
         product_list = []
         for product_data in file_data:

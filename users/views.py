@@ -11,7 +11,10 @@ class CustomLoginView(LoginView):
     form_class = CustomAuthenticationForm
 
     def form_valid(self, form):
-        messages.success(self.request, f"Welcome, {form.get_user().get_username()}!")
+        messages.success(
+            self.request,
+            f"Welcome, {form.get_user().get_username()}!"
+        )
         return super().form_valid(form)
 
 
