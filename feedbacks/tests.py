@@ -76,7 +76,7 @@ def test_feedbacks_page(client, login_user, feedback, faker):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["rating"][0] == 'Ensure this value is greater than or equal to 0.'
+    assert response.context["form"].errors["rating"][0] == 'Ensure this value is greater than or equal to 1.'
     assert Feedback.objects.all().count() == 1
 
     # Post correct data into form; new object have to be displayed

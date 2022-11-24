@@ -51,6 +51,8 @@ class DiscountAddView(CurrentOrderMixin, RedirectView):
         if form.is_valid():
             form.save()
             messages.success(request, "Discount applied!")
+        else:
+            messages.error(request, "There's no active discount with this code name")
         return self.get(request, *args, **kwargs)
 
 

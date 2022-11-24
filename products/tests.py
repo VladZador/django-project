@@ -135,6 +135,8 @@ def test_add_to_cart_page_as_user(login_user, faker, product):
     order = Order.objects.get(user=user)
     assert order.products.all()
     # todo: Find out how to check that this product is added to the current order.
+    #  Hmmm, maybe try to check Order object: order = Order.objects.filter(user=user), and then
+    #  (product in order.products) or smth like that.
     assert 'Product added to your cart!' in [m.message for m in list(response.context['messages'])]
 
 
