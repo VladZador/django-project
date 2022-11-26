@@ -256,5 +256,8 @@ def test_pay_order_page_for_user(login_user_with_order):
            in [m.message for m in list(response.context['messages'])]
 
 
+# todo:
 def test_recalculate_order_page_for_user():
     url = reverse("recalculate_cart")
+
+# todo: Also add tests for accessing "add discount", "pay order" etc. without existing order

@@ -122,17 +122,16 @@ def test_registration(client, faker, user_and_password):
     assert response.context["form"].errors["password2"][0] == "The two password fields didn’t match."
 
     # Post correct data; check that user is created and is not admin
-    email = faker.email()
     password = faker.password()
     data = {
-        "email": email,
+        "email": faker.email(),
         "password1": password,
         "password2": password,
     }
     response = client.post(url, data=data, follow=True)
     assert response.status_code == 200
     assert any(i[0] == reverse("main") for i in response.redirect_chain)
-    assert User.objects.filter(email=email)
+    assert User.objects.filter(email=data["email"])
     user = response.context['user']
     assert user.is_active
     assert not user.is_staff

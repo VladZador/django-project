@@ -4,7 +4,6 @@ from feedbacks.model_form import FeedbackModelForm
 from feedbacks.models import Feedback
 
 
-# todo: Removes extra "count()" calls
 def test_feedbacks_page(client, login_user, feedback, faker):
     # Open page as unregistered user
     url = reverse("feedbacks")
@@ -17,9 +16,7 @@ def test_feedbacks_page(client, login_user, feedback, faker):
     response = client.get(url)
     assert response.status_code == 200
     assert isinstance(response.context["form"], FeedbackModelForm)
-    assert feedback.text.encode("utf-8") in response.content
-    # assert Feedback.objects.filter(text=feedback.text) in response.context["feedbacks"]
-    # todo: Need to find a way to check if existing feedback is shown on the page
+    assert response.context["feedbacks"].filter(id=feedback.id)
 
     # Post incorrect data: empty data
     assert Feedback.objects.all().count() == 1
@@ -31,7 +28,6 @@ def test_feedbacks_page(client, login_user, feedback, faker):
     assert Feedback.objects.all().count() == 1
 
     # Post incorrect data: wrong user id
-    assert Feedback.objects.all().count() == 1
     data = {
         "text": faker.sentence(),
         "user": faker.random_number(),
@@ -44,7 +40,6 @@ def test_feedbacks_page(client, login_user, feedback, faker):
     assert Feedback.objects.all().count() == 1
 
     # Post incorrect data: wrong rating type
-    assert Feedback.objects.all().count() == 1
     data = {
         "text": faker.sentence(),
         "user": str(user.id),
@@ -56,7 +51,6 @@ def test_feedbacks_page(client, login_user, feedback, faker):
     assert Feedback.objects.all().count() == 1
 
     # Post incorrect data: wrong rating (>5)
-    assert Feedback.objects.all().count() == 1
     data = {
         "text": faker.sentence(),
         "user": str(user.id),
@@ -67,8 +61,7 @@ def test_feedbacks_page(client, login_user, feedback, faker):
     assert response.context["form"].errors["rating"][0] == 'Ensure this value is less than or equal to 5.'
     assert Feedback.objects.all().count() == 1
 
-    # Post incorrect data: wrong rating (<1)
-    assert Feedback.objects.all().count() == 1
+    # Post incorrect data: wrong rating (<0)
     data = {
         "text": faker.sentence(),
         "user": str(user.id),
@@ -76,11 +69,21 @@ def test_feedbacks_page(client, login_user, feedback, faker):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
+    assert response.context["form"].errors["rating"][0] == 'Ensure this value is greater than or equal to 0.'
+    assert Feedback.objects.all().count() == 1
+
+    # Post incorrect data: wrong rating (=0)
+    data = {
+        "text": faker.sentence(),
+        "user": str(user.id),
+        "rating": 0
+    }
+    response = client.post(url, data=data)
+    assert response.status_code == 200
     assert response.context["form"].errors["rating"][0] == 'Ensure this value is greater than or equal to 1.'
     assert Feedback.objects.all().count() == 1
 
     # Post correct data into form; new object have to be displayed
-    assert Feedback.objects.all().count() == 1
     text = faker.sentence()
     data = {
         "text": text,
@@ -91,7 +94,16 @@ def test_feedbacks_page(client, login_user, feedback, faker):
     assert response.status_code == 200
     assert Feedback.objects.filter(text=text)
     assert Feedback.objects.all().count() == 2
-    # todo: Need to find a way to check if existing feedbacks are shown on the page
+    assert Feedback.objects.filter(
+        text=data["text"],
+        user=data["user"],
+        rating=data["rating"]
+    )
+    assert response.context["feedbacks"].filter(
+        text=data["text"],
+        user=data["user"],
+        rating=data["rating"]
+    )
 
     # Post correct data into form; symbols have to be excluded from the text
     symbols = "&%$#@"
