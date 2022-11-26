@@ -1,16 +1,19 @@
 import csv
+from io import StringIO
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, RedirectView
 
 from orders.models import Order
-from .forms import AddToCartForm, UpdateFavoriteProductsForm
-from .models import Product
+from .forms import AddToCartForm, UpdateFavoriteProductsForm, CsvImportForm
+from .models import Product, Category
 
 
 class ProductListView(ListView):
@@ -40,13 +43,22 @@ class AddToCartView(LoginRequiredMixin, RedirectView):
         if form.is_valid():
             form.save()
             messages.success(self.request, "Product added to your cart!")
+        else:
+            messages.error(
+                self.request,
+                "Sorry, there is no product with this uuid"
+            )
         return self.get(request, *args, **kwargs)
 
 
 class UpdateFavoriteProductsView(LoginRequiredMixin, RedirectView):
 
     def post(self, request, *args, **kwargs):
-        form = UpdateFavoriteProductsForm(request.POST, user=request.user)
+        form = UpdateFavoriteProductsForm(
+            request.POST,
+            user=request.user,
+            action=kwargs["action"]
+        )
         if form.is_valid():
             form.save(kwargs["action"])
             if kwargs["action"] == "add":
@@ -59,10 +71,18 @@ class UpdateFavoriteProductsView(LoginRequiredMixin, RedirectView):
                     self.request,
                     "Product is removed from your favorite products list",
                 )
+        else:
+            messages.error(
+                self.request,
+                "Sorry, there is no product with this uuid"
+            )
         return self.get(request, *args, **kwargs)
 
     def get_redirect_url(self, *args, **kwargs):
-        return self.request.headers.get("Referer")
+        try:
+            return self.request.headers["Referer"]
+        except KeyError:
+            return reverse_lazy("favorite_products")
 
 
 class FavouriteProductsView(LoginRequiredMixin, ListView):
@@ -87,7 +107,6 @@ def export_csv(request, *args, **kwargs):
     writer = _create_csv_writer(response)
     for product in Product.objects.iterator():
         _write_csv_row(writer, product)
-    messages.success(request, "csv file created!")
     return response
 
 
@@ -104,10 +123,13 @@ def export_csv_detail(request, *args, **kwargs):
         },
     )
     writer = _create_csv_writer(response)
-    product = Product.objects.get(pk=kwargs["pk"])
-    _write_csv_row(writer, product)
-    messages.success(request, "csv file created!")
-    return response
+    try:
+        product = Product.objects.get(pk=kwargs["pk"])
+        _write_csv_row(writer, product)
+        return response
+    except Product.DoesNotExist:
+        messages.error(request, "Sorry, there is no product with this uuid")
+        return redirect("product_list")
 
 
 def _create_csv_writer(response):
@@ -128,15 +150,86 @@ def _create_csv_writer(response):
 
 def _write_csv_row(writer, product_instance):
     """Adds parameters to be passed to the csv writer object."""
+    if product_instance.image:
+        image_name = settings.DOMAIN + product_instance.image.url
+    else:
+        image_name = "No image"
     writer.writerow(
         {
             "name": product_instance.name,
-            "description": product_instance.description,
+            "description": product_instance.description or "",
             "category": product_instance.category,
             "price": product_instance.price,
             "currency": product_instance.currency,
             "sku": product_instance.sku,
-            "image": settings.DOMAIN + product_instance.image.url,
+            "image": image_name,
         }
     )
     return writer
+
+
+@staff_member_required
+def import_products_from_csv(request):
+    """
+    Allows to upload a .csv file, extracts the data, creates and adds
+    product instances from the data to the database.
+    """
+    if request.method == "POST":
+        csv_file = request.FILES["csv_import"]
+        if not csv_file.name.endswith(".csv"):
+            messages.error(request, "File '.csv' should be uploaded")
+        else:
+            file_data = csv.DictReader(
+                StringIO(csv_file.read().decode("utf-8"))
+            )
+            _create_products_from_csv(request, file_data)
+            return HttpResponseRedirect(
+                reverse_lazy("admin:products_product_changelist")
+            )
+    form = CsvImportForm()
+    context = {"form": form}
+    return render(
+        request,
+        template_name="admin/products/product/products_import_csv.html",
+        context=context)
+
+
+def _create_products_from_csv(request, file_data):
+    """
+    Creates product instances from the parsed "file_data", adds them to
+    the database. Blank image is inserted into the image field.
+    If there is no category for a passed category name in the database,
+    a new one with blank image is created.
+
+    :return: None
+    """
+    product_list = []
+    for product_data in file_data:
+        try:
+            category, _ = Category.objects.get_or_create(
+                name=product_data["category"]
+            )
+        except KeyError as error:
+            messages.error(request, f"Column {error} is not found")
+        finally:
+            try:
+                product_list.append(
+                    Product(
+                        name=product_data["name"],
+                        description=product_data["description"],
+                        category=Category.objects.get_or_create(
+                            name=product_data["category"]
+                        )[0],
+                        price=product_data["price"],
+                        currency=product_data["currency"],
+                        sku=product_data["sku"],
+                    )
+                )
+            except KeyError as error:
+                messages.error(request, f"Column {error} is not found")
+                break
+    if product_list:
+        Product.objects.bulk_create(product_list)
+        messages.success(request, "Data has been imported")
+    else:
+        messages.error(request, "Data has not been imported")

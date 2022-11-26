@@ -30,11 +30,19 @@
                     <tr>
                         <th scope="row">{{ forloop.counter }}</th>
                         <td>
-                            <a class="text-center" href="{% url 'product_detail' product_relation.product_id %}">
+                            {% if product_relation.product.image %}
+                             <a class="text-center" href="{% url 'product_detail' product_relation.product_id %}">
                                 <img width="50" class="product-image" src={{product_relation.product.image.url}} >
                             </a>
+                            {% endif %}
                         </td>
-                        <td>{{product_relation.product.name}}</td>
+                        <td>
+                            {% if product_relation.product.image %}
+                              {{product_relation.product.name}}
+                            {% else %}
+                              <a href="{% url 'product_detail' product_relation.product.id %}">{{product_relation.product.name}}</a>
+                            {% endif %}
+                        </td>
                         <td>
                             <input class="form-control"
                                    type="number"

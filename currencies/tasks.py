@@ -19,6 +19,7 @@ def delete_old_currencies():
 
 
 class CurrencyClient:
+    available_banks = ("privat", "mono", "national")
     privat = PrivatBankAPI()
     mono = MonoBankAPI()
     national = NationalBankAPI()
@@ -73,6 +74,8 @@ def get_currencies_from_bank(bank_name: str):
     :param bank_name: "privat", "mono" or "national"
     """
     client = CurrencyClient()
+    if bank_name not in client.available_banks:
+        raise ValueError('bank name should be "privat", "mono" or "national"')
     currency_list = getattr(client, bank_name).get_currency()
     currency_history_list = []
     creator = CurrenciesCreator()
@@ -93,10 +96,14 @@ def get_currencies_from_bank(bank_name: str):
 
 @shared_task
 def get_currencies():
-    first_try = get_currencies_from_bank.delay("privat")
-    sleep(5)
-    if AsyncResult(first_try.id).state == states.FAILURE:
-        second_try = get_currencies_from_bank.delay("mono")
+    try:
+        first_try = get_currencies_from_bank.delay("privat")
         sleep(5)
-        if AsyncResult(second_try.id).state == states.FAILURE:
-            get_currencies_from_bank.delay("national")
+        if AsyncResult(first_try.id).state == states.FAILURE:
+            second_try = get_currencies_from_bank.delay("mono")
+            sleep(5)
+            if AsyncResult(second_try.id).state == states.FAILURE:
+                get_currencies_from_bank.delay("national")
+    except ValueError:
+        ...
+        # todo: Add the errors logging, when we learn about them.

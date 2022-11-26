@@ -1,9 +1,14 @@
 import pytest
 from faker import Faker
+from django.contrib.auth import get_user_model
+from django.test.client import Client
 
+from feedbacks.models import Feedback
+from orders.models import Order, Discount
 from products.models import Product, Category
 
 fake = Faker()
+User = get_user_model()
 
 
 @pytest.fixture(scope="session")
@@ -21,15 +26,99 @@ def enable_db_access_for_all_tests(db):
     # code after tests run
 
 
-@pytest.fixture(scope='function')
-def product(db):
-    category, _ = Category.objects.get_or_create(name="Test category")
+@pytest.fixture(scope="function")
+def user_and_password(db, faker):
+    email = faker.email()
+    password = faker.password()
+    phone = faker.phone_number()
+    user = User.objects.create(
+        email=email,
+        phone=phone,
+        is_phone_valid=True
+    )
+    user.set_password(password)
+    user.save()
+    yield user, password
+
+
+@pytest.fixture(scope="function")
+def login_user(db, faker):
+    email = faker.email()
+    password = faker.password()
+
+    user, _ = User.objects.get_or_create(email=email)
+    user.set_password(password)
+    user.save()
+    client = Client()
+    client.login(username=email, password=password)
+    yield client, user
+
+
+@pytest.fixture(scope="function")
+def product(db, faker):
+    category, _ = Category.objects.get_or_create(name=faker.word())
     product, _ = Product.objects.get_or_create(
-        name="Lorem",
-        description="Ipsum",
+        name=faker.word(),
+        description=faker.word(),
         category=category,
         price=20.00,
         currency=980,
-        sku="dolor"
+        sku=faker.word()
     )
     yield product
+
+
+@pytest.fixture(scope="function")
+def feedback(db, faker, user_and_password):
+    user, _ = user_and_password
+    feedback, _ = Feedback.objects.get_or_create(
+        text=faker.sentence(),
+        user=user,
+        rating=faker.pyint(min_value=1, max_value=5)
+    )
+    yield feedback
+
+
+@pytest.fixture(scope="function")
+def login_user_with_order(db, faker):
+    email = faker.email()
+    password = faker.password()
+    user, _ = User.objects.get_or_create(email=email)
+    user.set_password(password)
+    user.save()
+    client = Client()
+    client.login(username=email, password=password)
+
+    category, _ = Category.objects.get_or_create(name=faker.word())
+    product, _ = Product.objects.get_or_create(
+        name=faker.word(),
+        description=faker.word(),
+        category=category,
+        price=30.00,
+        currency=980,
+        sku=faker.word()
+    )
+
+    order = Order.objects.create(user=user)
+    order.products.add(product)
+    yield client, user, order, product
+
+
+@pytest.fixture(scope="function")
+def discount_value(db, faker):
+    discount, _ = Discount.objects.get_or_create(
+        amount=20,
+        code=faker.word(),
+        discount_type=1,
+    )
+    yield discount
+
+
+@pytest.fixture(scope="function")
+def discount_percent(db, faker):
+    discount, _ = Discount.objects.get_or_create(
+        amount=20,
+        code=faker.word(),
+        discount_type=2,
+    )
+    yield discount

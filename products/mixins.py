@@ -5,6 +5,9 @@ from django.utils.translation import gettext_lazy as _
 from .models import Product
 
 
+# This mixin was used for AddToCartForm and UpdateFavoriteProductsForm, but
+# I had to separate a logic of "clean_product" for the second one, so currently
+# this mixin is not used.
 class ProductFormMixin(Form):
     product = UUIDField()
 

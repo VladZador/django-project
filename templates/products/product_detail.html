@@ -4,38 +4,38 @@
 {% block content %}
 
 <section class="product">
-        <div class="container">
-            <div class="row">
-                {% if product.image %}
-                <div class="col-4 p-3 ">
-                  <img src={{product.image.url}} class="card-img-top">
-                </div>
-                {% endif %}
-                <div class="col-8 p-3">
-                  <h5 class="title p-3">{{product.name}}</h5>
-                  <p class="text">Category: {{product.category}}</p>
-                  <p class="text">{{product.description}}</p>
-                  <p class="text">Price: {{product.price}} {{product.get_currency_display}}</p>
-                        <div class="row justify-content-between">
-                              <div class="col-2">
-                                {% include "parts/forms/add_to_cart.html" with product_id=product.id %}
-                              </div>
-
-                              <div class="col-3">
-                              {% if request.user in product.user_set.all %}
-                                {% include "parts/forms/remove_from_favorites.html" with product_id=product.id %}
-                              {% else %}
-                                {% include "parts/forms/add_to_favorites.html" with product_id=product.id %}
-                              {% endif %}
-                              </div>
-                        </div>
-                </div>
-                <div class="col p-3 d-md-flex justify-content-md-end">
-                    <a href="{% url 'product_detail_export_csv' product.id %}">Export product info (csv)</a>
-                </div>
-
+    <div class="container">
+        <div class="row">
+            {% if product.image %}
+            <div class="col-4 p-3 ">
+              <img src={{product.image.url}} class="card-img-top">
             </div>
+            {% endif %}
+            <div class="col-8 p-3">
+              <h5 class="title p-3">{{product.name}}</h5>
+              <p class="text">Category: {{product.category}}</p>
+              <p class="text">{{product.description}}</p>
+              <p class="text">Price: {{product.price}} {{product.get_currency_display}}</p>
+                    <div class="row justify-content-between">
+                          <div class="col-2">
+                            {% include "parts/forms/add_to_cart.html" with product_id=product.id %}
+                          </div>
+
+                          <div class="col-3">
+                          {% if request.user in product.user_set.all %}
+                            {% include "parts/forms/remove_from_favorites.html" with product_id=product.id %}
+                          {% else %}
+                            {% include "parts/forms/add_to_favorites.html" with product_id=product.id %}
+                          {% endif %}
+                          </div>
+                    </div>
+            </div>
+            <div class="col p-3 d-md-flex justify-content-md-end">
+                <a href="{% url 'product_detail_export_csv' product.id %}">Export product info (csv)</a>
+            </div>
+
         </div>
+    </div>
 </section>
 
 

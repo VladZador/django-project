@@ -50,7 +50,7 @@ class DiscountInputForm(Form):
             )
         except Discount.DoesNotExist:
             raise ValidationError(_(
-                "There's no discount with this code name"
+                "There's no active discount with this code name"
             ))
         return discount
 

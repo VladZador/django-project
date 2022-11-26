@@ -4,55 +4,55 @@
 {% block content %}
 
 <section class="products">
-        <div class="container-lg p-3">
-            <div class="row">
-                {% for product in object_list %}
-                  <div class="col-4">
-                    <div class="card" style="width: 18rem;">
-                        {% if product.image %}
-                        <a class="thumbnail p-3" href="{% url 'product_detail' product.id %}">
-                            <img src={{product.image.url}} class="card-img-top">
-                        </a>
-                        {% endif %}
-                      <div class="card-body">
-                          {% if product.image %}
-                            <h5 class="card-title">{{product.name}}</h5>
+    <div class="container-lg p-3">
+        <div class="row">
+            {% for product in object_list %}
+              <div class="col-4">
+                <div class="card" style="width: 18rem;">
+                    {% if product.image %}
+                    <a class="thumbnail p-3" href="{% url 'product_detail' product.id %}">
+                        <img src={{product.image.url}} class="card-img-top">
+                    </a>
+                    {% endif %}
+                  <div class="card-body">
+                      {% if product.image %}
+                        <h5 class="card-title">{{product.name}}</h5>
+                      {% else %}
+                        <a href="{% url 'product_detail' product.id %}">{{product.name}}</a>
+                      {% endif %}
+                        <p class="card-text">{{product.description}}</p>
+                        <p class="card-text">{{product.price}} {{product.get_currency_display}}</p>
+                        <div class="row justify-content-between">
+                          <div class="col-2">
+                            {% include "parts/forms/add_to_cart.html" with product_id=product.id %}
+                          </div>
+
+                          <div class="col-3">
+                          {% if request.user in product.user_set.all %}
+                            {% include "parts/forms/remove_from_favorites.html" with product_id=product.id %}
                           {% else %}
-                            <a href="{% url 'product_detail' product.id %}">{{product.name}}</a>
+                            {% include "parts/forms/add_to_favorites.html" with product_id=product.id %}
                           {% endif %}
-                            <p class="card-text">{{product.description}}</p>
-                            <p class="card-text">{{product.price}} {{product.get_currency_display}}</p>
-                            <div class="row justify-content-between">
-                              <div class="col-2">
-                                {% include "parts/forms/add_to_cart.html" with product_id=product.id %}
-                              </div>
-
-                              <div class="col-3">
-                              {% if request.user in product.user_set.all %}
-                                {% include "parts/forms/remove_from_favorites.html" with product_id=product.id %}
-                              {% else %}
-                                {% include "parts/forms/add_to_favorites.html" with product_id=product.id %}
-                              {% endif %}
-                              </div>
-                            </div>
-                      </div>
-                    </div>
+                          </div>
+                        </div>
                   </div>
-                    {% empty %}
-                    <div>
-                        <h3>Sorry, the product list is currently empty</h3>
-                    </div>
-                {% endfor %}
-
-            </div>
-            {% if object_list %}
-            <div class="row">
-                <div class="col p-3 d-md-flex justify-content-md-center">
-                    <a href="{% url 'product_list_export_csv' %}">Export product list (csv)</a>
                 </div>
-            </div>
-            {% endif %}
+              </div>
+                {% empty %}
+                <div>
+                    <h3>Sorry, the product list is currently empty</h3>
+                </div>
+            {% endfor %}
+
         </div>
+        {% if object_list %}
+        <div class="row">
+            <div class="col p-3 d-md-flex justify-content-md-center">
+                <a href="{% url 'product_list_export_csv' %}">Export product list (csv)</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
 </section>
 
 
