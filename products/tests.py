@@ -3,20 +3,18 @@ from django.urls import reverse
 from orders.models import Order
 
 
-def test_products_page_with_no_products(client):
+def test_product_list_page_with_no_products(client):
     # Open "products list" page with no objects present
     response = client.get(reverse("product_list"))
     assert response.status_code == 200
-    assert b"Sorry, the product list is currently empty" in response.content
+    assert not response.context["product_list"]
 
 
 def test_product_list_page(client, product):
     # Open "products list" page
     response = client.get(reverse("product_list"))
     assert response.status_code == 200
-    # todo: Find out how to check if product is present in the query for this view
-    assert product.name.encode("utf-8") in response.content
-    assert product.description.encode("utf-8") in response.content
+    assert response.context["product_list"].filter(id=product.id)
 
 
 def test_product_detail_page(client, faker, product):
@@ -27,9 +25,7 @@ def test_product_detail_page(client, faker, product):
     # Open "product detail" page
     response = client.get(reverse("product_detail", kwargs={"pk": product.id}))
     assert response.status_code == 200
-    # todo: Find out how to check if product is present in the query for this view
-    assert product.name.encode("utf-8") in response.content
-    assert product.description.encode("utf-8") in response.content
+    assert response.context["product"] == product
 
 
 def test_add_to_cart_page_as_unregistered_user(client, faker):
@@ -120,7 +116,7 @@ def test_add_to_cart_page_as_user(login_user, faker, product):
     response = client.post(url, data=data, follow=True)
     assert response.status_code == 200
     assert any(i[0] == success_url for i in response.redirect_chain)
-    # todo: Find out how to check ValidationError for wrong uuid in the form (if possible)
+    assert 'Sorry, there is no product with this uuid' in [m.message for m in list(response.context['messages'])]
     assert Order.objects.exists()
     order = Order.objects.get(user=user)
     assert not order.products.all()
@@ -133,10 +129,7 @@ def test_add_to_cart_page_as_user(login_user, faker, product):
     assert any(i[0] == success_url for i in response.redirect_chain)
     assert Order.objects.exists()
     order = Order.objects.get(user=user)
-    assert order.products.all()
-    # todo: Find out how to check that this product is added to the current order.
-    #  Hmmm, maybe try to check Order object: order = Order.objects.filter(user=user), and then
-    #  (product in order.products) or smth like that.
+    assert order.products.filter(id=product.id)
     assert 'Product added to your cart!' in [m.message for m in list(response.context['messages'])]
 
 
@@ -156,16 +149,22 @@ def test_add_to_favorites_page_as_user(login_user, faker, product):
     response = client.post(url, data=data, follow=True, HTTP_REFERER=referer)
     assert response.status_code == 200
     assert any(i[0] == referer for i in response.redirect_chain)
-    # todo: Find out how to check ValidationError for wrong uuid in the form (if possible)
+    assert "Sorry, there is no product with this uuid" \
+           in [m.message for m in list(response.context['messages'])]
     assert not user.favorite_products.all()
+
+    # Accessing "Add product to the favorites" page using the POST method without the referer
+    data = {"product": faker.uuid4()}
+    response = client.post(url, data=data, follow=True)
+    assert response.status_code == 200
+    assert any(i[0] == reverse("favorite_products") for i in response.redirect_chain)
 
     # Accessing "Add product to the favorites" page using the POST method with correct uuid
     data = {"product": product.id}
     response = client.post(url, data=data, follow=True, HTTP_REFERER=referer)
     assert response.status_code == 200
     assert any(i[0] == referer for i in response.redirect_chain)
-    assert user.favorite_products.all()
-    # todo: Find out how to check that this product is added to the favorite products of the current user.
+    assert user.favorite_products.filter(id=product.id)
     assert 'Product is added to your favorite products list!' \
            in [m.message for m in list(response.context['messages'])]
 
@@ -186,7 +185,8 @@ def test_remove_from_favorites_page_as_user(login_user, faker, product):
     response = client.post(url, data=data, follow=True, HTTP_REFERER=referer)
     assert response.status_code == 200
     assert any(i[0] == referer for i in response.redirect_chain)
-    # todo: Find out how to check ValidationError for wrong uuid in the form (if possible)
+    assert "Sorry, there is no product with this uuid" \
+           in [m.message for m in list(response.context['messages'])]
     assert not user.favorite_products.all()
 
     # Accessing "Remove product from the favorites" page using the POST method without the referer
@@ -202,7 +202,8 @@ def test_remove_from_favorites_page_as_user(login_user, faker, product):
     assert response.status_code == 200
     assert any(i[0] == referer for i in response.redirect_chain)
     assert not user.favorite_products.all()
-    # todo: Find out how to check ValidationError if product is not in the "favorite products" list.
+    assert "Sorry, there is no product with this uuid" \
+           in [m.message for m in list(response.context['messages'])]
 
     # Accessing "Remove product from the favorites" page using the POST method with correct uuid
     user.favorite_products.add(product)
@@ -210,8 +211,7 @@ def test_remove_from_favorites_page_as_user(login_user, faker, product):
     response = client.post(url, data=data, follow=True, HTTP_REFERER=referer)
     assert response.status_code == 200
     assert any(i[0] == referer for i in response.redirect_chain)
-    assert not user.favorite_products.all()
-    # todo: Find out how to check that this product is removed from the favorite products of the current user.
+    assert not user.favorite_products.filter(id=product.id)
     assert 'Product is removed from your favorite products list' \
            in [m.message for m in list(response.context['messages'])]
 
@@ -223,14 +223,13 @@ def test_favorite_products_page_as_user(login_user, product):
     # Open favorite products page when there's no favorite products for current user
     response = client.get(url)
     assert response.status_code == 200
-    assert b"You haven't added any favorite product yet" in response.content
+    assert not response.context["favorite_products_list"]
 
     # Open favorite products page
     user.favorite_products.add(product)
     response = client.get(url)
     assert response.status_code == 200
-    # todo: Find out how to check if product is present in the query for this view
-    assert product.name.encode("utf-8") in response.content
+    assert response.context["favorite_products_list"].filter(id=product.id)
 
 
 def test_product_list_export_csv_page_as_user(login_user, product):

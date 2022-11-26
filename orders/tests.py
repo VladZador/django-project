@@ -1,4 +1,7 @@
+import pytest
 from django.urls import reverse
+
+from .models import Order
 
 
 def test_cart_page_for_unregistered_user(client):
@@ -72,8 +75,6 @@ def test_cart_page_for_user_no_order(login_user):
     response = client.get(reverse("cart"))
     assert response.status_code == 200
     assert not response.context["order"]
-    assert not response.context["products_relation"]
-    assert b"Your cart is empty" in response.content
 
 
 def test_cart_page_for_user(login_user_with_order):
@@ -84,11 +85,10 @@ def test_cart_page_for_user(login_user_with_order):
     response = client.get(url)
     assert response.status_code == 200
     assert response.context["order"] == order
-    assert response.context["products_relation"]
 
 
 def test_remove_product_page_for_user(login_user_with_order, faker, product):
-    client, user, order, _ = login_user_with_order
+    client, user, order, product1 = login_user_with_order
     order.products.add(product)
 
     correct_url = reverse("remove_product", kwargs={"pk": product.id})
@@ -99,22 +99,31 @@ def test_remove_product_page_for_user(login_user_with_order, faker, product):
     response = client.get(correct_url, follow=True)
     assert response.status_code == 200
     assert any(i[0] == success_url for i in response.redirect_chain)
-    # todo: Find out how to check if both products are present in the query for this view
     assert order.products.all().count() == 2
 
     # Accessing "Remove product from the cart" page using the POST method with wrong uuid
     response = client.post(wrong_url, follow=True)
     assert response.status_code == 200
     assert any(i[0] == success_url for i in response.redirect_chain)
-    # todo: Find out how to check if both products are present in the query for this view
     assert order.products.all().count() == 2
 
     # Accessing "Remove product from the cart" page using the POST method
     response = client.post(correct_url, follow=True)
     assert response.status_code == 200
     assert any(i[0] == success_url for i in response.redirect_chain)
-    # todo: Find out how to check if one product is not present in the query for this view
     assert order.products.all().count() == 1
+
+    # Accessing "Remove product from the cart" page using the POST method with one product left
+    response = client.post(
+        reverse("remove_product", kwargs={"pk": product1.id}),
+        follow=True
+    )
+    assert response.status_code == 200
+    assert any(i[0] == success_url for i in response.redirect_chain)
+    assert not order.products.all()
+    with pytest.raises(Order.DoesNotExist) as exc_info:
+        order.refresh_from_db()
+    assert "Order matching query does not exist" in str(exc_info.value)
 
 
 def test_remove_all_products_page_for_user(login_user_with_order, product):
@@ -128,15 +137,16 @@ def test_remove_all_products_page_for_user(login_user_with_order, product):
     response = client.get(url, follow=True)
     assert response.status_code == 200
     assert any(i[0] == success_url for i in response.redirect_chain)
-    # todo: Find out how to check if both products are present in the query for this view
     assert order.products.all().count() == 2
 
     # Accessing "Remove all products from the cart" page using the POST method
     response = client.post(url, follow=True)
     assert response.status_code == 200
     assert any(i[0] == success_url for i in response.redirect_chain)
-    # todo: Find out how to check that no product is present in the query for this view
     assert not order.products.all()
+    with pytest.raises(Order.DoesNotExist) as exc_info:
+        order.refresh_from_db()
+    assert "Order matching query does not exist" in str(exc_info.value)
 
 
 def test_add_discount_page_for_user(login_user_with_order, faker, discount_value, discount_percent):
@@ -218,8 +228,6 @@ def test_order_page_for_user_no_order(login_user):
     response = client.get(reverse("cart"))
     assert response.status_code == 200
     assert not response.context["order"]
-    assert not response.context["products_relation"]
-    assert b"Your cart is empty" in response.content
 
 
 def test_order_page_for_user(login_user_with_order):
@@ -230,7 +238,6 @@ def test_order_page_for_user(login_user_with_order):
     response = client.get(url)
     assert response.status_code == 200
     assert response.context["order"] == order
-    assert response.context["products_relation"]
 
 
 def test_pay_order_page_for_user(login_user_with_order):

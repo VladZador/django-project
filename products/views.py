@@ -43,6 +43,11 @@ class AddToCartView(LoginRequiredMixin, RedirectView):
         if form.is_valid():
             form.save()
             messages.success(self.request, "Product added to your cart!")
+        else:
+            messages.error(
+                self.request,
+                "Sorry, there is no product with this uuid"
+            )
         return self.get(request, *args, **kwargs)
 
 
@@ -66,6 +71,11 @@ class UpdateFavoriteProductsView(LoginRequiredMixin, RedirectView):
                     self.request,
                     "Product is removed from your favorite products list",
                 )
+        else:
+            messages.error(
+                self.request,
+                "Sorry, there is no product with this uuid"
+            )
         return self.get(request, *args, **kwargs)
 
     def get_redirect_url(self, *args, **kwargs):
