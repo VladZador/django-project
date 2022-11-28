@@ -1,7 +1,9 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.forms import Form, CharField, IntegerField, UUIDField
 from django.utils.translation import gettext_lazy as _
 
+from orders.mixins import CurrentOrderFormMixin
 from orders.models import Discount
 from products.models import Product
 
@@ -11,9 +13,12 @@ class RecalculateCartForm(Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, *kwargs)
         self.instance = kwargs['instance']
-        self.fields = {key: IntegerField() if key.startswith(
-            'quantity') else UUIDField() for key in self.data.keys() if
-                       key != 'csrfmiddlewaretoken'}
+        self.fields = {
+            key: IntegerField(
+                validators=[MinValueValidator(1)]
+            ) if key.startswith('quantity') else UUIDField()
+            for key in self.data.keys() if key != 'csrfmiddlewaretoken'
+        }
 
     def save(self):
         """
@@ -34,13 +39,8 @@ class RecalculateCartForm(Form):
         return self.instance
 
 
-class DiscountInputForm(Form):
+class DiscountInputForm(CurrentOrderFormMixin):
     discount = CharField(max_length=32)
-
-    def __init__(self, *args, **kwargs):
-        instance = kwargs.pop("instance")
-        super().__init__(*args, **kwargs)
-        self.instance = instance
 
     def clean_discount(self):
         try:
@@ -60,12 +60,7 @@ class DiscountInputForm(Form):
         return self.instance
 
 
-class DiscountCancelForm(Form):
-
-    def __init__(self, *args, **kwargs):
-        instance = kwargs.pop("instance")
-        super().__init__(*args, **kwargs)
-        self.instance = instance
+class DiscountCancelForm(CurrentOrderFormMixin):
 
     def save(self):
         self.instance.discount = None
@@ -87,7 +82,8 @@ class ProductRemoveForm(Form):
         # self.product_list is needed in order to check whether the order has
         # some products in it later, in the save() method, without additional
         # access to the database
-        self.products_list = self.instance.products.all()
+        if self.instance:
+            self.products_list = self.instance.products.all()
 
     def clean_product(self):
         try:
@@ -96,6 +92,8 @@ class ProductRemoveForm(Form):
             raise ValidationError(_(
                 "Sorry, there is no product with this uuid"
             ))
+        except AttributeError:
+            raise ValidationError(_("Order doesn't exist"))
         return product
 
     def save(self):
@@ -104,23 +102,13 @@ class ProductRemoveForm(Form):
             self.instance.delete()
 
 
-class AllProductsRemoveForm(Form):
-
-    def __init__(self, *args, **kwargs):
-        instance = kwargs.pop("instance")
-        super().__init__(*args, **kwargs)
-        self.instance = instance
+class AllProductsRemoveForm(CurrentOrderFormMixin):
 
     def save(self):
         self.instance.delete()
 
 
-class OrderPaymentForm(Form):
-
-    def __init__(self, *args, **kwargs):
-        instance = kwargs.pop("instance")
-        super().__init__(*args, **kwargs)
-        self.instance = instance
+class OrderPaymentForm(CurrentOrderFormMixin):
 
     def save(self):
         self.instance.is_paid = True

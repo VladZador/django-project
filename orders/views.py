@@ -28,6 +28,8 @@ class OrderDetailView(CurrentOrderMixin, TemplateView):
             return self.get_object().get_products_through()
 
     def post(self, *args, **kwargs):
+        """Is used to provide access to corresponding url (or urls)
+        using the POST method (clicking the buttons, etc.)"""
         return self.get(self, *args, **kwargs)
 
 
@@ -54,7 +56,8 @@ class DiscountAddView(CurrentOrderMixin, RedirectView):
         else:
             messages.error(
                 request,
-                "There's no active discount with this code name"
+                "Discount not applied. "
+                "Most likely, there's no active discount with this code name"
             )
         return self.get(request, *args, **kwargs)
 

@@ -269,3 +269,6 @@ def test_product_detail_export_csv_page_as_user(login_user, faker, product):
     assert f"{product.name},{product.description},{product.category},{product.price:.2f}," \
            f"{product.currency},{product.sku},No image".encode("utf-8") \
            in response.content
+
+
+# todo: create test for "import_products_from_csv" view
