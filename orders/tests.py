@@ -1,7 +1,7 @@
 import pytest
 from django.urls import reverse
 
-from .models import Order
+from .models import Order, Discount
 
 
 # Block "unregistered user"
@@ -205,11 +205,12 @@ def test_recalculate_cart_page_for_user(login_user_with_order):
     assert order.products.through.objects.get(order=order).quantity == data["quantity_0"]
 
 
-def test_remove_product_page_for_user(login_user_with_order, faker, product):
-    client, user, order, product1 = login_user_with_order
-    order.products.add(product)
+def test_remove_product_page_for_user(login_user_with_order, faker, product_factory):
+    client, user, order, product_1 = login_user_with_order
+    product_2 = product_factory()
+    order.products.add(product_2)
 
-    correct_url = reverse("remove_product", kwargs={"pk": product.id})
+    correct_url = reverse("remove_product", kwargs={"pk": product_2.id})
     wrong_url = reverse("remove_product", kwargs={"pk": faker.uuid4()})
     success_url = reverse("cart")
 
@@ -233,7 +234,7 @@ def test_remove_product_page_for_user(login_user_with_order, faker, product):
 
     # Accessing "Remove product from the cart" page using the POST method with one product left
     response = client.post(
-        reverse("remove_product", kwargs={"pk": product1.id}),
+        reverse("remove_product", kwargs={"pk": product_1.id}),
         follow=True
     )
     assert response.status_code == 200
@@ -244,8 +245,9 @@ def test_remove_product_page_for_user(login_user_with_order, faker, product):
     assert "Order matching query does not exist" in str(exc_info.value)
 
 
-def test_remove_all_products_page_for_user(login_user_with_order, product):
+def test_remove_all_products_page_for_user(login_user_with_order, product_factory):
     client, user, order, _ = login_user_with_order
+    product = product_factory()
     order.products.add(product)
 
     url = reverse("remove_all_products")
@@ -267,7 +269,7 @@ def test_remove_all_products_page_for_user(login_user_with_order, product):
     assert "Order matching query does not exist" in str(exc_info.value)
 
 
-def test_add_discount_page_for_user(login_user_with_order, faker, discount_value, discount_percent):
+def test_add_discount_page_for_user(login_user_with_order, faker, discount_factory):
     client, _, order, product = login_user_with_order
 
     url = reverse("add_discount")
@@ -292,32 +294,35 @@ def test_add_discount_page_for_user(login_user_with_order, faker, discount_value
 
     # Accessing "Add discount" page using the POST method with correct discount code
     # (discount type = value)
+    discount_value = discount_factory()
     data = {"discount": discount_value.code}
     response = client.post(url, data=data, follow=True)
     assert response.status_code == 200
     assert any(i[0] == success_url for i in response.redirect_chain)
     order.refresh_from_db()
     assert order.discount == discount_value
-    assert order.calculate_with_discount() == product.price - discount_value.amount
+    assert order.calculate_with_discount() == round((product.price - discount_value.amount), 2)
 
     assert 'Discount applied!' in [m.message for m in list(response.context['messages'])]
 
     # Accessing "Add discount" page using the POST method with correct discount code
     # (discount type = percent)
+    discount_percent = discount_factory(discount_type=Discount.PERCENT)
     data = {"discount": discount_percent.code}
     response = client.post(url, data=data, follow=True)
     assert response.status_code == 200
     assert any(i[0] == success_url for i in response.redirect_chain)
     order.refresh_from_db()
     assert order.discount == discount_percent
-    assert order.calculate_with_discount() == product.price * (100 - discount_percent.amount)/100
+    assert order.calculate_with_discount() == round((product.price * (100 - discount_percent.amount)/100), 2)
 
     assert 'Discount applied!' in [m.message for m in list(response.context['messages'])]
 
 
-def test_cancel_discount_page_for_user(login_user_with_order, faker, discount_value):
+def test_cancel_discount_page_for_user(login_user_with_order, faker, discount_factory):
     client, _, order, _ = login_user_with_order
-    order.discount = discount_value
+    discount = discount_factory()
+    order.discount = discount
     order.save(update_fields=("discount",))
 
     url = reverse("cancel_discount")
@@ -328,7 +333,7 @@ def test_cancel_discount_page_for_user(login_user_with_order, faker, discount_va
     assert response.status_code == 200
     assert any(i[0] == success_url for i in response.redirect_chain)
     order.refresh_from_db()
-    assert order.discount == discount_value
+    assert order.discount == discount
 
     # Accessing "Cancel discount" page using the POST method
     response = client.post(url, follow=True)

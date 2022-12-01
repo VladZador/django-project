@@ -4,9 +4,11 @@ from feedbacks.model_form import FeedbackModelForm
 from feedbacks.models import Feedback
 
 
-def test_feedbacks_page(client, login_user, feedback, faker):
-    # Open page as unregistered user
+def test_feedbacks_page(client, login_user, feedback_factory, faker):
+    feedback = feedback_factory()
     url = reverse("feedbacks")
+
+    # Open page as unregistered user
     response = client.get(url, follow=True)
     assert response.status_code == 200
     assert any(i[0] == reverse("login") + f"?next={url}" for i in response.redirect_chain)
@@ -30,7 +32,7 @@ def test_feedbacks_page(client, login_user, feedback, faker):
     # Post incorrect data: wrong user id
     data = {
         "text": faker.sentence(),
-        "user": faker.random_number(),
+        "user": faker.uuid4(),
         "rating": 3
     }
     response = client.post(url, data=data)

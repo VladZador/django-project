@@ -10,14 +10,18 @@ def test_product_list_page_with_no_products(client):
     assert not response.context["product_list"]
 
 
-def test_product_list_page(client, product):
+def test_product_list_page(client, product_factory):
+    product = product_factory()
+
     # Open "products list" page
     response = client.get(reverse("product_list"))
     assert response.status_code == 200
     assert response.context["product_list"].filter(id=product.id)
 
 
-def test_product_detail_page(client, faker, product):
+def test_product_detail_page(client, faker, product_factory):
+    product = product_factory()
+
     # Open 404 page when passing wrong uuid
     response = client.get(reverse("product_detail", kwargs={"pk": faker.uuid4()}))
     assert response.status_code == 404
@@ -91,8 +95,8 @@ def test_product_list_export_csv_page_as_unregistered_user(client):
     assert any(i[0] == reverse("login") + f"?next={url}" for i in response.redirect_chain)
 
 
-def test_product_detail_export_csv_page_as_unregistered_user(client, product):
-    url = reverse("product_detail_export_csv", kwargs={"pk": product.id})
+def test_product_detail_export_csv_page_as_unregistered_user(client, faker):
+    url = reverse("product_detail_export_csv", kwargs={"pk": faker.uuid4()})
 
     # Open redirected login page
     response = client.get(url, follow=True)
@@ -100,7 +104,8 @@ def test_product_detail_export_csv_page_as_unregistered_user(client, product):
     assert any(i[0] == reverse("login") + f"?next={url}" for i in response.redirect_chain)
 
 
-def test_add_to_cart_page_as_user(login_user, faker, product):
+def test_add_to_cart_page_as_user(login_user, faker, product_factory):
+    product = product_factory()
     client, user = login_user
     url = reverse("add_to_cart")
     success_url = reverse("product_list")
@@ -133,7 +138,8 @@ def test_add_to_cart_page_as_user(login_user, faker, product):
     assert 'Product added to your cart!' in [m.message for m in list(response.context['messages'])]
 
 
-def test_add_to_favorites_page_as_user(login_user, faker, product):
+def test_add_to_favorites_page_as_user(login_user, faker, product_factory):
+    product = product_factory()
     client, user = login_user
     url = reverse("update_favorite_products", kwargs={"action": "add"})
     referer = reverse("product_list")
@@ -169,7 +175,8 @@ def test_add_to_favorites_page_as_user(login_user, faker, product):
            in [m.message for m in list(response.context['messages'])]
 
 
-def test_remove_from_favorites_page_as_user(login_user, faker, product):
+def test_remove_from_favorites_page_as_user(login_user, faker, product_factory):
+    product = product_factory()
     client, user = login_user
     url = reverse("update_favorite_products", kwargs={"action": "remove"})
     referer = reverse("product_list")
@@ -216,7 +223,8 @@ def test_remove_from_favorites_page_as_user(login_user, faker, product):
            in [m.message for m in list(response.context['messages'])]
 
 
-def test_favorite_products_page_as_user(login_user, product):
+def test_favorite_products_page_as_user(login_user, product_factory):
+    product = product_factory()
     client, user = login_user
     url = reverse("favorite_products")
 
@@ -232,7 +240,8 @@ def test_favorite_products_page_as_user(login_user, product):
     assert response.context["favorite_products_list"].filter(id=product.id)
 
 
-def test_product_list_export_csv_page_as_user(login_user, product):
+def test_product_list_export_csv_page_as_user(login_user, product_factory):
+    product = product_factory()
     client, _ = login_user
     url = reverse("product_list_export_csv")
 
@@ -247,7 +256,8 @@ def test_product_list_export_csv_page_as_user(login_user, product):
            in response.content
 
 
-def test_product_detail_export_csv_page_as_user(login_user, faker, product):
+def test_product_detail_export_csv_page_as_user(login_user, faker, product_factory):
+    product = product_factory()
     client, _ = login_user
 
     # Redirect to "product_list" page when passing wrong uuid
