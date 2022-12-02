@@ -5,7 +5,8 @@ from django.contrib.auth import get_user_model
 from django.test.client import Client
 
 from mystore.factories import (
-    UserFactory, CategoryFactory, ProductFactory, FeedbackFactory, DiscountFactory, OrderFactory
+    CategoryFactory, DiscountFactory,  FeedbackFactory, OrderFactory,
+    ProductFactory, UserFactory
 )
 
 fake = Faker()

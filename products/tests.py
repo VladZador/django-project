@@ -1,6 +1,9 @@
 from django.urls import reverse
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from orders.models import Order
+from .forms import CsvImportForm
+from .models import Product, Category
 
 
 def test_product_list_page_with_no_products(client):
@@ -102,6 +105,15 @@ def test_product_detail_export_csv_page_as_unregistered_user(client, faker):
     response = client.get(url, follow=True)
     assert response.status_code == 200
     assert any(i[0] == reverse("login") + f"?next={url}" for i in response.redirect_chain)
+
+
+def test_import_products_from_csv_page_as_unregistered_user(client):
+    url = reverse("admin:import_products_csv")
+
+    # Open redirected login page - it requires staff status
+    response = client.get(url, follow=True)
+    assert response.status_code == 200
+    assert any(i[0] == reverse("admin:login") + f"?next={url}" for i in response.redirect_chain)
 
 
 def test_add_to_cart_page_as_user(login_user, faker, product_factory):
@@ -281,4 +293,110 @@ def test_product_detail_export_csv_page_as_user(login_user, faker, product_facto
            in response.content
 
 
-# todo: create test for "import_products_from_csv" view
+def test_import_products_from_csv_page_as_user(login_user, faker):
+    client, _ = login_user
+    url = reverse("admin:import_products_csv")
+
+    # Open redirected login page - it requires staff status
+    response = client.get(url, follow=True)
+    assert response.status_code == 200
+    assert any(i[0] == reverse("admin:login") + f"?next={url}" for i in response.redirect_chain)
+
+
+def test_import_products_from_csv_page_as_admin(admin_client, faker):
+    url = reverse("admin:import_products_csv")
+
+    # Access page
+    response = admin_client.get(url)
+    assert response.status_code == 200
+    assert isinstance(response.context["form"], CsvImportForm)
+
+    # Post an empty data
+    response = admin_client.post(url, follow=True)
+    assert response.status_code == 200
+    assert "No file uploaded. File '.csv' should be uploaded" \
+           in [m.message for m in list(response.context['messages'])]
+
+    # Post a file with wrong extension
+    data = {"csv_import": SimpleUploadedFile("file.txt", b"content")}
+    response = admin_client.post(url, data=data, follow=True)
+    assert response.status_code == 200
+    assert "File '.csv' should be uploaded" in [m.message for m in list(response.context['messages'])]
+
+    # Post a file with dummy data (or some of the headers are missing)
+    data = {"csv_import": SimpleUploadedFile("file.csv", b"content", content_type="text/csv")}
+    response = admin_client.post(url, data=data, follow=True)
+    assert response.status_code == 200
+    assert not Product.objects.all()
+    assert "Data has not been imported. Some columns are missing" \
+           in [m.message for m in list(response.context['messages'])]
+
+    # Post a file with some absent value data (no product sku)
+    future_product = {
+        "name": faker.word(),
+        "description": faker.sentence(),
+        "category": faker.word(),
+        "price": faker.pyfloat(left_digits=2, right_digits=2, positive=True, min_value=10),
+        "currency": 980,
+    }
+    file_content = f"name,description,category,price,currency,sku\n" \
+                   f"{future_product['name']},{future_product['description']}," \
+                   f"{future_product['category']},{future_product['price']}," \
+                   f"{future_product['currency']}".encode("utf-8")
+    data = {"csv_import": SimpleUploadedFile("file.csv", file_content, content_type="text/csv")}
+
+    response = admin_client.post(url, data=data, follow=True)
+    assert response.status_code == 200
+    assert not Product.objects.all()
+    assert 'Data has not been imported. Some columns are missing or overpopulated'\
+           in [m.message for m in list(response.context['messages'])]
+
+    # Post a file with wrong data type (price)
+    future_product = {
+        "name": faker.word(),
+        "description": faker.sentence(),
+        "category": faker.word(),
+        "price": faker.word(),
+        "currency": 980,
+        "sku": faker.word(),
+    }
+    file_content = f"name,description,category,price,currency,sku\n" \
+                   f"{future_product['name']},{future_product['description']}," \
+                   f"{future_product['category']},{future_product['price']}," \
+                   f"{future_product['currency']},{future_product['sku']}".encode("utf-8")
+    data = {"csv_import": SimpleUploadedFile("file.csv", file_content, content_type="text/csv")}
+
+    response = admin_client.post(url, data=data, follow=True)
+    assert response.status_code == 200
+    assert not Product.objects.all()
+    assert "Data has not been imported. Some data have wrong type" \
+           in [m.message for m in list(response.context['messages'])]
+
+    # Post a file with correct data
+    future_product = {
+        "name": faker.word(),
+        "description": faker.sentence(),
+        "category": faker.word(),
+        "price": faker.pyfloat(left_digits=2, right_digits=2, positive=True, min_value=10),
+        "currency": 980,
+        "sku": faker.word()
+    }
+    file_content = f"name,description,category,price,currency,sku\n" \
+                   f"{future_product['name']},{future_product['description']}," \
+                   f"{future_product['category']},{future_product['price']}," \
+                   f"{future_product['currency']},{future_product['sku']}".encode("utf-8")
+    data = {"csv_import": SimpleUploadedFile("file.csv", file_content, content_type="text/csv")}
+
+    response = admin_client.post(url, data=data, follow=True)
+    assert response.status_code == 200
+    assert Category.objects.filter(name=future_product["category"])
+    category = Category.objects.get(name=future_product["category"])
+    assert Product.objects.filter(
+        name=future_product["name"],
+        description=future_product["description"],
+        category=category,
+        price=future_product["price"],
+        currency=future_product["currency"],
+        sku=future_product["sku"]
+    )
+    assert 'Data has been imported' in [m.message for m in list(response.context['messages'])]
