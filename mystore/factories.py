@@ -2,7 +2,9 @@ import factory
 from faker import Faker
 from django.contrib.auth import get_user_model
 
+from currencies.models import CurrencyHistory
 from feedbacks.models import Feedback
+from mystore.model_choices import Currencies
 from orders.models import Discount, Order
 from products.models import Category, Product
 
@@ -67,3 +69,26 @@ class OrderFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("user",)
 
     user = factory.SubFactory(UserFactory)
+
+
+currencies_choices = [x for x in Currencies if x != 980]
+
+
+class CurrencyHistoryFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = CurrencyHistory
+
+    currency = factory.Sequence(lambda _: fake.random_element(
+        elements=currencies_choices
+    ))
+    buy = factory.Sequence(lambda _: fake.pydecimal(
+        left_digits=2,
+        right_digits=2,
+        positive=True
+    ))
+    sale = factory.Sequence(lambda _: fake.pydecimal(
+        left_digits=2,
+        right_digits=2,
+        positive=True
+    ))
+

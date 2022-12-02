@@ -1,7 +1,9 @@
 import pytest
+from datetime import datetime, timedelta
 from django.urls import reverse
 
 from .models import Order, Discount
+from .tasks import delete_old_pending_orders
 
 
 # Block "unregistered user"
@@ -366,4 +368,14 @@ def test_pay_order_page_for_user(login_user_with_order):
            in [m.message for m in list(response.context['messages'])]
 
 
-# todo: create test for "delete_old_pending_orders" task
+def test_delete_old_pending_orders(order_factory):
+    assert not Order.objects.exists()
+    old_order = order_factory()
+    new_order = order_factory()
+    old_creation_day = datetime.now() - timedelta(days=3)
+    old_order.created_at = old_creation_day
+    old_order.save(update_fields=("created_at",))
+
+    delete_old_pending_orders()
+    assert not Order.objects.filter(id=old_order.id)
+    assert Order.objects.filter(id=new_order.id)
