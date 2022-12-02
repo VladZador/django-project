@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
@@ -174,20 +175,27 @@ def import_products_from_csv(request):
     Allows to upload a .csv file, extracts the data, creates and adds
     product instances from the data to the database.
     """
-    if request.method == "POST":
-        csv_file = request.FILES["csv_import"]
-        if not csv_file.name.endswith(".csv"):
-            messages.error(request, "File '.csv' should be uploaded")
-        else:
-            file_data = csv.DictReader(
-                StringIO(csv_file.read().decode("utf-8"))
-            )
-            _create_products_from_csv(request, file_data)
-            return HttpResponseRedirect(
-                reverse_lazy("admin:products_product_changelist")
-            )
     form = CsvImportForm()
     context = {"form": form}
+
+    if request.method == "POST":
+        csv_file = request.FILES.get("csv_import")
+        if not csv_file:
+            messages.error(
+                request,
+                "No file uploaded. File '.csv' should be uploaded"
+            )
+        else:
+            if not csv_file.name.endswith(".csv"):
+                messages.error(request, "File '.csv' should be uploaded")
+            else:
+                file_data = csv.DictReader(
+                    StringIO(csv_file.read().decode("utf-8"))
+                )
+                _create_products_from_csv(request, file_data)
+                return HttpResponseRedirect(
+                    reverse_lazy("admin:products_product_changelist")
+                )
     return render(
         request,
         template_name="admin/products/product/products_import_csv.html",
@@ -203,18 +211,26 @@ def _create_products_from_csv(request, file_data):
 
     :return: None
     """
-    product_list = []
-    for product_data in file_data:
-        try:
-            category, _ = Category.objects.get_or_create(
-                name=product_data["category"]
-            )
-        except KeyError as error:
-            messages.error(request, f"Column {error} is not found")
-        finally:
-            try:
-                product_list.append(
-                    Product(
+    if not file_data.fieldnames == [
+        'name', 'description', 'category', 'price', 'currency', 'sku'
+    ]:
+        messages.error(
+            request,
+            "Data has not been imported. Some columns are missing"
+        )
+    else:
+        product_list = []
+        for product_data in file_data:
+            if len([v for v in product_data.values() if v]) \
+                    != len(file_data.fieldnames):
+                messages.error(
+                    request,
+                    "Data has not been imported. "
+                    "Some columns are missing or overpopulated"
+                )
+            else:
+                try:
+                    product = Product(
                         name=product_data["name"],
                         description=product_data["description"],
                         category=Category.objects.get_or_create(
@@ -224,12 +240,13 @@ def _create_products_from_csv(request, file_data):
                         currency=product_data["currency"],
                         sku=product_data["sku"],
                     )
-                )
-            except KeyError as error:
-                messages.error(request, f"Column {error} is not found")
-                break
-    if product_list:
-        Product.objects.bulk_create(product_list)
-        messages.success(request, "Data has been imported")
-    else:
-        messages.error(request, "Data has not been imported")
+                    product.clean_fields(exclude=("image",))
+                    product_list.append(product)
+                except ValidationError:
+                    messages.error(
+                        request,
+                        "Data has not been imported. Some data has wrong type"
+                    )
+        if product_list:
+            Product.objects.bulk_create(product_list)
+            messages.success(request, "Data has been imported")
