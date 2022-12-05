@@ -73,16 +73,14 @@ def test_get_currencies_from_bank_task(mocker):
     CurrencyHistory.objects.all().delete()
 
 
-def test_delete_old_currencies_task():
+def test_delete_old_currencies_task(currency_history_factory):
     assert not CurrencyHistory.objects.exists()
-    CurrencyHistory.objects.create(
-        currency=840,
-        buy=1,
-        sale=2,
-    )
-    last_day = datetime.now() - timedelta(days=1)
-    assert CurrencyHistory.objects.exists()
-    CurrencyHistory.objects.update(created_at=last_day)
+    old_currency_history = currency_history_factory()
+    new_currency_history = currency_history_factory()
+    old_creation_day = datetime.now() - timedelta(days=1)
+    old_currency_history.created_at = old_creation_day
+    old_currency_history.save(update_fields=("created_at",))
 
     delete_old_currencies()
-    assert not CurrencyHistory.objects.exists()
+    assert not CurrencyHistory.objects.filter(id=old_currency_history.id)
+    assert CurrencyHistory.objects.filter(id=new_currency_history.id)

@@ -5,8 +5,8 @@ from django.contrib.auth import get_user_model
 from django.test.client import Client
 
 from mystore.factories import (
-    CategoryFactory, DiscountFactory,  FeedbackFactory, OrderFactory,
-    ProductFactory, UserFactory
+    CategoryFactory, DiscountFactory, FeedbackFactory, OrderFactory,
+    ProductFactory, UserFactory, CurrencyHistoryFactory
 )
 
 fake = Faker()
@@ -34,6 +34,7 @@ register(ProductFactory)
 register(FeedbackFactory)
 register(DiscountFactory)
 register(OrderFactory)
+register(CurrencyHistoryFactory)
 
 
 @pytest.fixture(scope="function")
