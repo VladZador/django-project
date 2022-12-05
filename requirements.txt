@@ -17,3 +17,4 @@ Faker==15.3.2
 pytest-mock==3.10.0
 coverage==6.5.0
 pytest-factoryboy==2.5.0
+beautifulsoup4==4.11.1

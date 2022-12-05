@@ -91,4 +91,3 @@ class CurrencyHistoryFactory(factory.django.DjangoModelFactory):
         right_digits=2,
         positive=True
     ))
-

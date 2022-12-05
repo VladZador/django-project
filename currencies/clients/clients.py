@@ -1,30 +1,7 @@
-from requests import request
+from mystore.api_clients import BaseClient
 
 
-class GetCurrencyBaseClient:
-    base_url = None
-
-    def _request(self,
-                 method: str,
-                 params: dict = None,
-                 headers: dict = None,
-                 data: dict = None):
-        try:
-            response = request(
-                url=self.base_url,
-                method=method,
-                params=params or {},
-                headers=headers or {},
-                data=data or {}
-            )
-        except Exception:
-            ...
-            # todo: Add the errors logging, when we learn about them
-        else:
-            return response.json()
-
-
-class PrivatBankAPI(GetCurrencyBaseClient):
+class PrivatBankAPI(BaseClient):
     base_url = "https://api.privatbank.ua/p24api/pubinfo"
 
     def get_currency(self) -> list:
@@ -38,13 +15,13 @@ class PrivatBankAPI(GetCurrencyBaseClient):
             }
         ]
         """
-        return self._request(
+        return self.get_request(
             "get",
             params={"exchange": "", "json": "", "coursid": 11}
         )
 
 
-class MonoBankAPI(GetCurrencyBaseClient):
+class MonoBankAPI(BaseClient):
     base_url = "https://api.monobank.ua/bank/currency"
 
     def get_currency(self) -> list:
@@ -60,10 +37,10 @@ class MonoBankAPI(GetCurrencyBaseClient):
             }
         ]
         """
-        return self._request("get")
+        return self.get_request("get")
 
 
-class NationalBankAPI(GetCurrencyBaseClient):
+class NationalBankAPI(BaseClient):
     base_url = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange"
 
     def get_currency(self) -> list:
@@ -78,7 +55,4 @@ class NationalBankAPI(GetCurrencyBaseClient):
             }
         ]
         """
-        return self._request(
-            "get",
-            params={"json": ""}
-        )
+        return self.get_request("get", params={"json": ""})
