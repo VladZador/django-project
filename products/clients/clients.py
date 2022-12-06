@@ -29,7 +29,6 @@ class BufetParser(BaseClient):
                     "sku": name
                 })
             except (AttributeError, KeyError) as err:
-                # todo add logging
                 logger.error(err)
         return product_list
 
