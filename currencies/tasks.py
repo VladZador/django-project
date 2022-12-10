@@ -1,7 +1,7 @@
+import logging
 from datetime import timedelta
-from time import sleep
 
-from celery import shared_task, states
+from celery import shared_task
 from celery.result import AsyncResult
 from django.utils import timezone
 
@@ -9,6 +9,9 @@ from mystore.celery import app
 from mystore.model_choices import Currencies
 from .clients.clients import MonoBankAPI, NationalBankAPI, PrivatBankAPI
 from .models import CurrencyHistory
+
+
+logger = logging.getLogger(__name__)
 
 
 @app.task
@@ -84,11 +87,11 @@ def get_currencies_from_bank(bank_name: str):
             currency_history_list = getattr(
                 creator, bank_name
             )(currency_dict, currency_history_list)
-    except (KeyError, ValueError, TypeError):
-        ...
-        # todo: Add the errors logging, when we learn about them.
-        #  Check if "AsyncResult(id).state" returns failure when
-        #  handling the exception
+    except (KeyError, ValueError, TypeError) as err:
+        logger.error(err)
+        raise  # With this construction, the error is logged,
+        # but an exception is raised in order to indicate
+        # that the function did not work as expected.
     if currency_history_list:
         CurrencyHistory.objects.bulk_create(currency_history_list)
         delete_old_currencies.delay()
@@ -98,12 +101,9 @@ def get_currencies_from_bank(bank_name: str):
 def get_currencies():
     try:
         first_try = get_currencies_from_bank.delay("privat")
-        sleep(5)
-        if AsyncResult(first_try.id).state == states.FAILURE:
+        if not AsyncResult(first_try.id).successful():
             second_try = get_currencies_from_bank.delay("mono")
-            sleep(5)
-            if AsyncResult(second_try.id).state == states.FAILURE:
+            if not AsyncResult(second_try.id).successful():
                 get_currencies_from_bank.delay("national")
-    except ValueError:
-        ...
-        # todo: Add the errors logging, when we learn about them.
+    except ValueError as err:
+        logger.error(err)

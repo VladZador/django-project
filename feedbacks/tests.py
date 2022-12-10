@@ -17,16 +17,16 @@ def test_feedbacks_page(client, login_user, feedback_factory, faker):
     client, user = login_user
     response = client.get(url)
     assert response.status_code == 200
-    assert isinstance(response.context["form"], FeedbackModelForm)
-    assert response.context["feedbacks"].filter(id=feedback.id)
+    assert type(response.context["form"]) == FeedbackModelForm
+    assert response.context["feedbacks"].filter(id=feedback.id).exists()
 
     # Post incorrect data: empty data
     assert Feedback.objects.all().count() == 1
     response = client.post(url, data={})
     assert response.status_code == 200
-    assert response.context["form"].errors["text"][0] == 'This field is required.'
-    assert response.context["form"].errors["user"][0] == 'This field is required.'
-    assert response.context["form"].errors["rating"][0] == 'This field is required.'
+    assert response.context["form"].errors["text"]
+    assert response.context["form"].errors["user"]
+    assert response.context["form"].errors["rating"]
     assert Feedback.objects.all().count() == 1
 
     # Post incorrect data: wrong user id
@@ -37,8 +37,7 @@ def test_feedbacks_page(client, login_user, feedback_factory, faker):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["user"][0] == \
-           'Select a valid choice. That choice is not one of the available choices.'
+    assert response.context["form"].errors["user"]
     assert Feedback.objects.all().count() == 1
 
     # Post incorrect data: wrong rating type
@@ -49,7 +48,7 @@ def test_feedbacks_page(client, login_user, feedback_factory, faker):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["rating"][0] == 'Enter a whole number.'
+    assert response.context["form"].errors["rating"]
     assert Feedback.objects.all().count() == 1
 
     # Post incorrect data: wrong rating (>5)
@@ -60,7 +59,7 @@ def test_feedbacks_page(client, login_user, feedback_factory, faker):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["rating"][0] == 'Ensure this value is less than or equal to 5.'
+    assert response.context["form"].errors["rating"]
     assert Feedback.objects.all().count() == 1
 
     # Post incorrect data: wrong rating (<0)
@@ -71,7 +70,7 @@ def test_feedbacks_page(client, login_user, feedback_factory, faker):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["rating"][0] == 'Ensure this value is greater than or equal to 0.'
+    assert response.context["form"].errors["rating"]
     assert Feedback.objects.all().count() == 1
 
     # Post incorrect data: wrong rating (=0)
@@ -82,7 +81,7 @@ def test_feedbacks_page(client, login_user, feedback_factory, faker):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["rating"][0] == 'Ensure this value is greater than or equal to 1.'
+    assert response.context["form"].errors["rating"]
     assert Feedback.objects.all().count() == 1
 
     # Post correct data into form; new object have to be displayed
@@ -94,18 +93,17 @@ def test_feedbacks_page(client, login_user, feedback_factory, faker):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert Feedback.objects.filter(text=text)
     assert Feedback.objects.all().count() == 2
     assert Feedback.objects.filter(
         text=data["text"],
         user=data["user"],
         rating=data["rating"]
-    )
+    ).exists()
     assert response.context["feedbacks"].filter(
         text=data["text"],
         user=data["user"],
         rating=data["rating"]
-    )
+    ).exists()
 
     # Post correct data into form; symbols have to be excluded from the text
     symbols = "&%$#@"
@@ -118,6 +116,6 @@ def test_feedbacks_page(client, login_user, feedback_factory, faker):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert Feedback.objects.filter(text=raw_text)
+    assert Feedback.objects.filter(text=raw_text).exists()
     feedback = Feedback.objects.get(text=raw_text)
     assert symbols not in feedback.text

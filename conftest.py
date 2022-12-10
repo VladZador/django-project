@@ -45,6 +45,7 @@ def user_and_password(db, faker, user_factory):
     )
     password = faker.password()
     user.set_password(password)
+    user.is_active = True
     user.save()
     yield user, password
 

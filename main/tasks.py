@@ -6,7 +6,7 @@ from mystore.celery import app
 
 
 @app.task
-def send_contact_form(email, text):
+def send_contact_form(email: str, text: str):
     send_mail(
         subject=settings.EMAIL_SUBJECT_PREFIX + "Contact form",
         message=f"From: {email}\n{text}",
