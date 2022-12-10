@@ -19,7 +19,7 @@ def test_product_list_page(client, product_factory):
     # Open "products list" page
     response = client.get(reverse("product_list"))
     assert response.status_code == 200
-    assert response.context["product_list"].filter(id=product.id)
+    assert response.context["product_list"].filter(id=product.id).exists()
 
 
 def test_product_detail_page(client, faker, product_factory):
@@ -133,7 +133,7 @@ def test_add_to_cart_page_as_user(login_user, faker, product_factory):
     response = client.post(url, data=data, follow=True)
     assert response.status_code == 200
     assert any(i[0] == success_url for i in response.redirect_chain)
-    assert 'Sorry, there is no product with this uuid' in [m.message for m in list(response.context['messages'])]
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
     assert Order.objects.exists()
     order = Order.objects.get(user=user)
     assert not order.products.all()
@@ -146,8 +146,8 @@ def test_add_to_cart_page_as_user(login_user, faker, product_factory):
     assert any(i[0] == success_url for i in response.redirect_chain)
     assert Order.objects.exists()
     order = Order.objects.get(user=user)
-    assert order.products.filter(id=product.id)
-    assert 'Product added to your cart!' in [m.message for m in list(response.context['messages'])]
+    assert order.products.filter(id=product.id).exists()
+    assert "success" in [m.level_tag for m in list(response.context['messages'])]
 
 
 def test_add_to_favorites_page_as_user(login_user, faker, product_factory):
@@ -167,8 +167,7 @@ def test_add_to_favorites_page_as_user(login_user, faker, product_factory):
     response = client.post(url, data=data, follow=True, HTTP_REFERER=referer)
     assert response.status_code == 200
     assert any(i[0] == referer for i in response.redirect_chain)
-    assert "Sorry, there is no product with this uuid" \
-           in [m.message for m in list(response.context['messages'])]
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
     assert not user.favorite_products.all()
 
     # Accessing "Add product to the favorites" page using the POST method without the referer
@@ -182,9 +181,8 @@ def test_add_to_favorites_page_as_user(login_user, faker, product_factory):
     response = client.post(url, data=data, follow=True, HTTP_REFERER=referer)
     assert response.status_code == 200
     assert any(i[0] == referer for i in response.redirect_chain)
-    assert user.favorite_products.filter(id=product.id)
-    assert 'Product is added to your favorite products list!' \
-           in [m.message for m in list(response.context['messages'])]
+    assert user.favorite_products.filter(id=product.id).exists()
+    assert "info" in [m.level_tag for m in list(response.context['messages'])]
 
 
 def test_remove_from_favorites_page_as_user(login_user, faker, product_factory):
@@ -204,8 +202,7 @@ def test_remove_from_favorites_page_as_user(login_user, faker, product_factory):
     response = client.post(url, data=data, follow=True, HTTP_REFERER=referer)
     assert response.status_code == 200
     assert any(i[0] == referer for i in response.redirect_chain)
-    assert "Sorry, there is no product with this uuid" \
-           in [m.message for m in list(response.context['messages'])]
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
     assert not user.favorite_products.all()
 
     # Accessing "Remove product from the favorites" page using the POST method without the referer
@@ -221,8 +218,7 @@ def test_remove_from_favorites_page_as_user(login_user, faker, product_factory):
     assert response.status_code == 200
     assert any(i[0] == referer for i in response.redirect_chain)
     assert not user.favorite_products.all()
-    assert "Sorry, there is no product with this uuid" \
-           in [m.message for m in list(response.context['messages'])]
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
 
     # Accessing "Remove product from the favorites" page using the POST method with correct uuid
     user.favorite_products.add(product)
@@ -230,9 +226,8 @@ def test_remove_from_favorites_page_as_user(login_user, faker, product_factory):
     response = client.post(url, data=data, follow=True, HTTP_REFERER=referer)
     assert response.status_code == 200
     assert any(i[0] == referer for i in response.redirect_chain)
-    assert not user.favorite_products.filter(id=product.id)
-    assert 'Product is removed from your favorite products list' \
-           in [m.message for m in list(response.context['messages'])]
+    assert not user.favorite_products.filter(id=product.id).exists()
+    assert "info" in [m.level_tag for m in list(response.context['messages'])]
 
 
 def test_favorite_products_page_as_user(login_user, product_factory):
@@ -249,7 +244,7 @@ def test_favorite_products_page_as_user(login_user, product_factory):
     user.favorite_products.add(product)
     response = client.get(url)
     assert response.status_code == 200
-    assert response.context["favorite_products_list"].filter(id=product.id)
+    assert response.context["favorite_products_list"].filter(id=product.id).exists()
 
 
 def test_product_list_export_csv_page_as_user(login_user, product_factory):
@@ -277,8 +272,7 @@ def test_product_detail_export_csv_page_as_user(login_user, faker, product_facto
     response = client.get(url, follow=True)
     assert response.status_code == 200
     assert any(i[0] == reverse("product_list") for i in response.redirect_chain)
-    assert 'Sorry, there is no product with this uuid' \
-           in [m.message for m in list(response.context['messages'])]
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
 
     # Access page when passing correct uuid
     url = reverse("product_detail_export_csv", kwargs={"pk": product.id})
@@ -314,22 +308,20 @@ def test_import_products_from_csv_page_as_admin(admin_client, faker):
     # Post an empty data
     response = admin_client.post(url, follow=True)
     assert response.status_code == 200
-    assert "No file uploaded. File '.csv' should be uploaded" \
-           in [m.message for m in list(response.context['messages'])]
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
 
     # Post a file with wrong extension
     data = {"csv_import": SimpleUploadedFile("file.txt", b"content")}
     response = admin_client.post(url, data=data, follow=True)
     assert response.status_code == 200
-    assert "File '.csv' should be uploaded" in [m.message for m in list(response.context['messages'])]
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
 
     # Post a file with dummy data (or some of the headers are missing)
     data = {"csv_import": SimpleUploadedFile("file.csv", b"content", content_type="text/csv")}
     response = admin_client.post(url, data=data, follow=True)
     assert response.status_code == 200
-    assert not Product.objects.all()
-    assert "Data has not been imported. Some columns are missing" \
-           in [m.message for m in list(response.context['messages'])]
+    assert not Product.objects.exists()
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
 
     # Post a file with some absent value data (no product sku)
     future_product = {
@@ -347,9 +339,8 @@ def test_import_products_from_csv_page_as_admin(admin_client, faker):
 
     response = admin_client.post(url, data=data, follow=True)
     assert response.status_code == 200
-    assert not Product.objects.all()
-    assert 'Data has not been imported. Some columns are missing or overpopulated'\
-           in [m.message for m in list(response.context['messages'])]
+    assert not Product.objects.exists()
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
 
     # Post a file with wrong data type (price)
     future_product = {
@@ -368,9 +359,8 @@ def test_import_products_from_csv_page_as_admin(admin_client, faker):
 
     response = admin_client.post(url, data=data, follow=True)
     assert response.status_code == 200
-    assert not Product.objects.all()
-    assert "Data has not been imported. Some data has wrong type" \
-           in [m.message for m in list(response.context['messages'])]
+    assert not Product.objects.exists()
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
 
     # Post a file with correct data
     future_product = {
@@ -389,7 +379,7 @@ def test_import_products_from_csv_page_as_admin(admin_client, faker):
 
     response = admin_client.post(url, data=data, follow=True)
     assert response.status_code == 200
-    assert Category.objects.filter(name=future_product["category"])
+    assert Category.objects.filter(name=future_product["category"]).exists()
     category = Category.objects.get(name=future_product["category"])
     assert Product.objects.filter(
         name=future_product["name"],
@@ -398,5 +388,5 @@ def test_import_products_from_csv_page_as_admin(admin_client, faker):
         price=future_product["price"],
         currency=future_product["currency"],
         sku=future_product["sku"]
-    )
-    assert 'Data has been imported' in [m.message for m in list(response.context['messages'])]
+    ).exists()
+    assert "success" in [m.level_tag for m in list(response.context['messages'])]

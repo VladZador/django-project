@@ -41,6 +41,14 @@ class RegistrationView(FormView):
 
 
 class RegistrationConfirmView(RedirectView):
+    """
+    Confirms an email validity by checking uidb64 code and token passed
+    in the url.
+    If a phone number was provided during registration, the view "sends" a SMS
+    with special auto-generated code and passes it in the cache. Also, it
+    passes user_id in the request.session so that it can be later used in the
+    RegistrationPhoneConfirmView.
+    """
     url = reverse_lazy("login")
 
     def get(self, request, *args, **kwargs):
@@ -79,6 +87,9 @@ class RegistrationConfirmView(RedirectView):
 
 
 class RegistrationPhoneConfirmView(FormView):
+    """
+    Checks whether the provided code is equal to the one stored in the cache.
+    """
     form_class = RegistrationPhoneConfirmForm
     template_name = "registration/phone_confirm.html"
     success_url = reverse_lazy("login")

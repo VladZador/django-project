@@ -14,13 +14,13 @@ def test_contact_us_page(client, faker):
     # Get "contact us" page
     response = client.get(reverse("contact_us"))
     assert response.status_code == 200
-    assert isinstance(response.context["form"], ContactForm)
+    assert type(response.context["form"]) == ContactForm
 
     # Wrong form input: empty data
     response = client.post(reverse("contact_us"), data={})
     assert response.status_code == 200
-    assert response.context["form"].errors["email"][0] == "This field is required."
-    assert response.context["form"].errors["text"][0] == "This field is required."
+    assert response.context["form"].errors["email"]
+    assert response.context["form"].errors["text"]
     assert not mail.outbox
 
     # Wrong form input: Not an email in the email field
@@ -30,7 +30,7 @@ def test_contact_us_page(client, faker):
     }
     response = client.post(reverse("contact_us"), data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["email"][0] == "Enter a valid email address."
+    assert response.context["form"].errors["email"]
     assert not mail.outbox
 
     # Correct form input

@@ -132,8 +132,7 @@ def test_add_discount_page_for_user_no_order(login_user, faker):
     assert response.status_code == 200
     assert any(i[0] == reverse("cart") for i in response.redirect_chain)
     assert not response.context["order"]
-    assert "Discount not applied. Most likely, there's no active discount with this code name" \
-           in [m.message for m in list(response.context['messages'])]
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
 
 
 def test_cancel_discount_page_for_user_no_order(login_user, faker):
@@ -153,7 +152,7 @@ def test_pay_order_page_for_user_no_order(login_user, faker):
     response = client.post(reverse("pay_order"), follow=True)
     assert response.status_code == 200
     assert any(i[0] == reverse("product_list") for i in response.redirect_chain)
-    assert not Order.objects.filter(user=user, is_active=True)
+    assert not Order.objects.filter(user=user, is_active=True).exists()
 
 
 # Block "ordinary access"
@@ -291,8 +290,7 @@ def test_add_discount_page_for_user(login_user_with_order, faker, discount_facto
     assert any(i[0] == success_url for i in response.redirect_chain)
     order.refresh_from_db()
     assert not order.discount
-    assert "Discount not applied. Most likely, there's no active discount with this code name" \
-           in [m.message for m in list(response.context['messages'])]
+    assert "error" in [m.level_tag for m in list(response.context['messages'])]
 
     # Accessing "Add discount" page using the POST method with correct discount code
     # (discount type = value)
@@ -305,7 +303,7 @@ def test_add_discount_page_for_user(login_user_with_order, faker, discount_facto
     assert order.discount == discount_value
     assert order.calculate_with_discount() == round((product.price - discount_value.amount), 2)
 
-    assert 'Discount applied!' in [m.message for m in list(response.context['messages'])]
+    assert "success" in [m.level_tag for m in list(response.context['messages'])]
 
     # Accessing "Add discount" page using the POST method with correct discount code
     # (discount type = percent)
@@ -318,7 +316,7 @@ def test_add_discount_page_for_user(login_user_with_order, faker, discount_facto
     assert order.discount == discount_percent
     assert order.calculate_with_discount() == round((product.price * (100 - discount_percent.amount)/100), 2)
 
-    assert 'Discount applied!' in [m.message for m in list(response.context['messages'])]
+    assert "success" in [m.level_tag for m in list(response.context['messages'])]
 
 
 def test_cancel_discount_page_for_user(login_user_with_order, faker, discount_factory):
@@ -343,7 +341,7 @@ def test_cancel_discount_page_for_user(login_user_with_order, faker, discount_fa
     assert any(i[0] == success_url for i in response.redirect_chain)
     order.refresh_from_db()
     assert not order.discount
-    assert 'Discount not applied' in [m.message for m in list(response.context['messages'])]
+    assert "info" in [m.level_tag for m in list(response.context['messages'])]
 
 
 def test_pay_order_page_for_user(login_user_with_order):
@@ -364,8 +362,7 @@ def test_pay_order_page_for_user(login_user_with_order):
     order.refresh_from_db()
     assert order.is_paid and not order.is_active
     assert order.total_amount == product.price
-    assert 'Your order has been successfully processed!' \
-           in [m.message for m in list(response.context['messages'])]
+    assert "success" in [m.level_tag for m in list(response.context['messages'])]
 
 
 def test_delete_old_pending_orders(order_factory):
@@ -377,5 +374,5 @@ def test_delete_old_pending_orders(order_factory):
     old_order.save(update_fields=("created_at",))
 
     delete_old_pending_orders()
-    assert not Order.objects.filter(id=old_order.id)
-    assert Order.objects.filter(id=new_order.id)
+    assert not Order.objects.filter(id=old_order.id).exists()
+    assert Order.objects.filter(id=new_order.id).exists()

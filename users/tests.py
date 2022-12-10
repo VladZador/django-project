@@ -21,29 +21,25 @@ def test_login_user(client, faker, user_and_password):
     # Get login page with login form
     response = client.get(url)
     assert response.status_code == 200
-    assert isinstance(response.context["form"], CustomAuthenticationForm)
-    # todo: change isinstance() to checking type("some_form")
+    assert type(response.context["form"]) == CustomAuthenticationForm
 
     # Post only password into login form
     data = {"password": faker.password()}
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["__all__"][0] \
-           == 'Email or phone number is required'
+    assert response.context["form"].errors["__all__"]
 
     # Post only username into login form
     data = {"username": faker.email()}
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["password"][0] \
-           == 'This field is required.'
+    assert response.context["form"].errors["password"]
 
     # Post only phone number into login form
     data = {"phone": faker.phone_number()}
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["password"][0] \
-           == 'This field is required.'
+    assert response.context["form"].errors["password"]
 
     # Post wrong password into login form
     data = {
@@ -52,9 +48,7 @@ def test_login_user(client, faker, user_and_password):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["__all__"][0] == \
-           "Please enter a correct email address and password. " \
-           "Note that both fields may be case-sensitive."
+    assert response.context["form"].errors["__all__"]
 
     # Post wrong email into login form
     data = {
@@ -63,9 +57,7 @@ def test_login_user(client, faker, user_and_password):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["__all__"][0] == \
-           "Please enter a correct email address and password. " \
-           "Note that both fields may be case-sensitive."
+    assert response.context["form"].errors["__all__"]
 
     # Post wrong phone number into login form
     data = {
@@ -74,9 +66,7 @@ def test_login_user(client, faker, user_and_password):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["__all__"][0] == \
-           "Please enter a correct email address and password. " \
-           "Note that both fields may be case-sensitive."
+    assert response.context["form"].errors["__all__"]
 
     # Post correct email and password into login form
     data = {
@@ -86,8 +76,8 @@ def test_login_user(client, faker, user_and_password):
     response = client.post(url, data=data, follow=True)
     assert response.status_code == 200
     assert any(i[0] == reverse("main") for i in response.redirect_chain)
-    assert f"Welcome, {user.get_username()}!" \
-           in [m.message for m in list(response.context['messages'])]
+    assert "success" \
+           in [m.level_tag for m in list(response.context['messages'])]
     client.logout()
 
     # Post correct phone and password into login form
@@ -98,8 +88,8 @@ def test_login_user(client, faker, user_and_password):
     response = client.post(url, data=data, follow=True)
     assert response.status_code == 200
     assert any(i[0] == reverse("main") for i in response.redirect_chain)
-    assert f"Welcome, {user.get_username()}!" \
-           in [m.message for m in list(response.context['messages'])]
+    assert "success" \
+           in [m.level_tag for m in list(response.context['messages'])]
 
 
 def test_registration_and_confirmation(client, faker, user_and_password):
@@ -108,17 +98,14 @@ def test_registration_and_confirmation(client, faker, user_and_password):
     # Get registration page with the registration form
     response = client.get(url)
     assert response.status_code == 200
-    assert isinstance(response.context["form"], RegistrationForm)
+    assert type(response.context["form"]) == RegistrationForm
 
     # Post empty data into registration form
     response = client.post(url, data={})
     assert response.status_code == 200
-    assert response.context["form"].errors["email"][0] == \
-           'This field is required.'
-    assert response.context["form"].errors["password1"][0] == \
-           'This field is required.'
-    assert response.context["form"].errors["password2"][0] == \
-           'This field is required.'
+    assert response.context["form"].errors["email"]
+    assert response.context["form"].errors["password1"]
+    assert response.context["form"].errors["password2"]
 
     # Post data of existing user into registration form
     user, password = user_and_password
@@ -129,8 +116,7 @@ def test_registration_and_confirmation(client, faker, user_and_password):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["email"][0] == \
-           'User with this Email address already exists.'
+    assert response.context["form"].errors["email"]
 
     # Post different passwords into registration form
     data = {
@@ -140,8 +126,7 @@ def test_registration_and_confirmation(client, faker, user_and_password):
     }
     response = client.post(url, data=data)
     assert response.status_code == 200
-    assert response.context["form"].errors["password2"][0] \
-           == "The two password fields didn’t match."
+    assert response.context["form"].errors["password2"]
 
     # Post correct data; check that user is created,
     # but is not active and is not admin
@@ -164,8 +149,8 @@ def test_registration_and_confirmation(client, faker, user_and_password):
         is_superuser=False
     ).exists()
     assert len(mail.outbox) == 1
-    assert "Check your email for confirmation" \
-           in [m.message for m in list(response.context['messages'])]
+    assert "success" \
+           in [m.level_tag for m in list(response.context['messages'])]
 
     # Parse the link in the mail and accessing confirmation page.
     # After that the user's "is_active" status has to be True
@@ -187,7 +172,7 @@ def test_registration_and_confirmation(client, faker, user_and_password):
     assert not User.objects.filter(
         email=data["email"],
         is_active=True,
-    )
+    ).exists()
     assert "error" in [m.level_tag for m in list(response.context['messages'])]
 
     # Accessing wrong confirmation link (wrong token)
@@ -204,7 +189,7 @@ def test_registration_and_confirmation(client, faker, user_and_password):
     assert not User.objects.filter(
         email=data["email"],
         is_active=True,
-    )
+    ).exists()
     assert "error" in [m.level_tag for m in list(response.context['messages'])]
 
     # Accessing correct confirmation link
@@ -219,15 +204,8 @@ def test_registration_and_confirmation(client, faker, user_and_password):
         email=data["email"],
         is_active=True,
     ).exists()
-    # todo: change assertion for filters: add exists() where possible
-
     assert "success" \
            in [m.level_tag for m in list(response.context['messages'])]
-
-    # todo: change assertion for messages from checking its message text to
-    #  its level tag:
-    #  assert "success" in \
-    #  [m.level_tag for m in list(response.context['messages'])]
 
 
 def test_registration_with_phone_number(client, faker):
@@ -279,7 +257,7 @@ def test_registration_with_phone_number(client, faker):
     confirm_phone_url = reverse('registration_phone_confirm')
     response = client.get(confirm_phone_url)
     assert response.status_code == 200
-    assert isinstance(response.context["form"], RegistrationPhoneConfirmForm)
+    assert type(response.context["form"]) == RegistrationPhoneConfirmForm
 
     # Post wrong code type into the form
     response = client.post(confirm_phone_url, data={"code": faker.word()})

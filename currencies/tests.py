@@ -17,8 +17,8 @@ def test_get_currencies_from_bank_task(mocker):
     get_currencies_from_bank("privat")
 
     assert get_currency_privat_mocker.call_count
-    assert CurrencyHistory.objects.filter(currency=978, buy=1, sale=2)
-    assert CurrencyHistory.objects.filter(currency=840, buy=3, sale=4)
+    assert CurrencyHistory.objects.filter(currency=978, buy=1, sale=2).exists()
+    assert CurrencyHistory.objects.filter(currency=840, buy=3, sale=4).exists()
     CurrencyHistory.objects.all().delete()
 
     # Test get_currencies_from_bank("mono")
@@ -33,8 +33,8 @@ def test_get_currencies_from_bank_task(mocker):
     get_currencies_from_bank("mono")
 
     assert get_currency_mono_mocker.call_count
-    assert CurrencyHistory.objects.filter(currency=978, buy=5, sale=6)
-    assert CurrencyHistory.objects.filter(currency=840, buy=7, sale=8)
+    assert CurrencyHistory.objects.filter(currency=978, buy=5, sale=6).exists()
+    assert CurrencyHistory.objects.filter(currency=840, buy=7, sale=8).exists()
     CurrencyHistory.objects.all().delete()
 
     # Test get_currencies_from_bank("national")
@@ -49,8 +49,8 @@ def test_get_currencies_from_bank_task(mocker):
     get_currencies_from_bank("national")
 
     assert get_currency_national_mocker.call_count
-    assert CurrencyHistory.objects.filter(currency=978, buy=9, sale=9)
-    assert CurrencyHistory.objects.filter(currency=840, buy=10, sale=10)
+    assert CurrencyHistory.objects.filter(currency=978, buy=9, sale=9).exists()
+    assert CurrencyHistory.objects.filter(currency=840, buy=10, sale=10).exists()
     CurrencyHistory.objects.all().delete()
 
 
@@ -63,8 +63,8 @@ def test_delete_old_currencies_task(currency_history_factory):
     old_currency_history.save(update_fields=("created_at",))
 
     delete_old_currencies()
-    assert not CurrencyHistory.objects.filter(id=old_currency_history.id)
-    assert CurrencyHistory.objects.filter(id=new_currency_history.id)
+    assert not CurrencyHistory.objects.filter(id=old_currency_history.id).exists()
+    assert CurrencyHistory.objects.filter(id=new_currency_history.id).exists()
 
 
 def test_get_currencies_task_first_try(mocker):
@@ -80,8 +80,8 @@ def test_get_currencies_task_first_try(mocker):
     get_currencies()
 
     assert get_currency_privat_mocker.call_count
-    assert CurrencyHistory.objects.filter(currency=978, buy=1, sale=2)
-    assert CurrencyHistory.objects.filter(currency=840, buy=3, sale=4)
+    assert CurrencyHistory.objects.filter(currency=978, buy=1, sale=2).exists()
+    assert CurrencyHistory.objects.filter(currency=840, buy=3, sale=4).exists()
 
 
 def test_get_currencies_task_second_try(mocker):
@@ -105,8 +105,8 @@ def test_get_currencies_task_second_try(mocker):
 
     assert get_currency_privat_mocker.call_count
     assert get_currency_mono_mocker.call_count
-    assert CurrencyHistory.objects.filter(currency=978, buy=5, sale=6)
-    assert CurrencyHistory.objects.filter(currency=840, buy=7, sale=8)
+    assert CurrencyHistory.objects.filter(currency=978, buy=5, sale=6).exists()
+    assert CurrencyHistory.objects.filter(currency=840, buy=7, sale=8).exists()
 
 
 def test_get_currencies_task_third_try(mocker):
@@ -138,5 +138,5 @@ def test_get_currencies_task_third_try(mocker):
     assert get_currency_privat_mocker.call_count
     assert get_currency_mono_mocker.call_count
     assert get_currency_national_mocker.call_count
-    assert CurrencyHistory.objects.filter(currency=978, buy=9, sale=9)
-    assert CurrencyHistory.objects.filter(currency=840, buy=10, sale=10)
+    assert CurrencyHistory.objects.filter(currency=978, buy=9, sale=9).exists()
+    assert CurrencyHistory.objects.filter(currency=840, buy=10, sale=10).exists()

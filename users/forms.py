@@ -18,7 +18,7 @@ User = get_user_model()
 
 class CustomAuthenticationForm(AuthenticationForm):
     """
-    Extends AuthenticationForm in order to include a phone number
+    Overrides AuthenticationForm in order to include a phone number
     as a second option for authentication.
     """
     # The username field is actually an email. And since we want to use either
@@ -56,7 +56,7 @@ class CustomAuthenticationForm(AuthenticationForm):
 class RegistrationForm(UserCreationForm):
     """
     Custom user creation form. Overrides basic form by making email required
-    field instead of username.
+    field instead of username. Also, a mail is sent to the email.
     """
     class Meta:
         model = User
@@ -74,6 +74,9 @@ class RegistrationForm(UserCreationForm):
         return super().clean()
 
     def save(self, commit=True):
+        """
+        Extends save() method by adding a "send_confirmation_mail" task.
+        """
         user = super().save(commit=commit)
         context = {
             'email': user.email,
