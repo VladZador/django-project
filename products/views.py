@@ -80,10 +80,13 @@ class UpdateFavoriteProductsView(LoginRequiredMixin, RedirectView):
         return self.get(request, *args, **kwargs)
 
     def get_redirect_url(self, *args, **kwargs):
-        try:
-            return self.request.headers["Referer"]
-        except KeyError:
-            return reverse_lazy("favorite_products")
+        """
+        Redirects to the referer, or if there's no any,
+        to the 'favorite_products' url.
+        """
+        return self.request.headers.get(
+            "Referer", reverse_lazy("favorite_products")
+        )
 
 
 class FavouriteProductsView(LoginRequiredMixin, ListView):
@@ -240,7 +243,7 @@ def _create_products_from_csv(request, file_data):
                         currency=product_data["currency"],
                         sku=product_data["sku"],
                     )
-                    product.clean_fields(exclude=("image",))
+                    product.full_clean(exclude=("image",))
                     product_list.append(product)
                 except ValidationError:
                     messages.error(

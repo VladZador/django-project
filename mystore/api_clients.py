@@ -22,9 +22,9 @@ class BaseClient:
                 data=data or {}
             )
             json_response = response.json()
-        except (exceptions.ConnectionError, exceptions.Timeout) as err:
-            logger.error(err)
         except exceptions.JSONDecodeError:
             return response.content
+        except (exceptions.ConnectionError, exceptions.Timeout) as err:
+            logger.error(err)
         else:
             return json_response

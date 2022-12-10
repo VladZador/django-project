@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<section class="phone_confirm">
+    <div class="container">
+        <div class="row">
+            <div class="col col-lg-4 offset-lg-4 mb-3">
+                <h1>Phone confirm</h1>
+
+                <form method="post">
+                    {% include "parts/forms/simple_form.html" with form=form %}
+                    <input class="btn btn-primary mt-3" type="submit" value="Confirm">
+                </form>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock content %}

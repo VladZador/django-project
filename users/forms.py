@@ -1,10 +1,22 @@
+import random
+
+from django.conf import settings
 from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.forms import (
     AuthenticationForm, UserCreationForm, UsernameField
 )
+from django.contrib.auth.tokens import default_token_generator
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django import forms
+from django.forms import CharField, TextInput, Form, IntegerField
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
+
+from .tasks import send_sms, send_confirmation_mail
+
+
+User = get_user_model()
 
 
 class CustomAuthenticationForm(AuthenticationForm):
@@ -14,9 +26,9 @@ class CustomAuthenticationForm(AuthenticationForm):
     """
     # The username field is actually an email. And since we want to use either
     # email or phone, we make both of these field optional.
-    username = UsernameField(widget=forms.TextInput(attrs={'autofocus': True}),
+    username = UsernameField(widget=TextInput(attrs={'autofocus': True}),
                              required=False)
-    phone = forms.CharField(required=False)
+    phone = CharField(required=False)
 
     def clean(self):
         # Keep in mind, username is actually an email.
@@ -47,11 +59,10 @@ class CustomAuthenticationForm(AuthenticationForm):
 class RegistrationForm(UserCreationForm):
     """
     Custom user creation form. Overrides basic form by making email required
-    field instead of username. The email name (without domain name) is used as
-    username.
+    field instead of username.
     """
     class Meta:
-        model = get_user_model()
+        model = User
         fields = ("email", "phone")
         field_classes = {
             'email': UsernameField,
@@ -60,3 +71,37 @@ class RegistrationForm(UserCreationForm):
         help_texts = {
             'phone': "Optional"
         }
+
+    def clean(self):
+        self.instance.is_active = False
+        return super().clean()
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        context = {
+            'email': user.email,
+            'domain': settings.DOMAIN,
+            'site_name': "MyStore",
+            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+            # todo: check if it's okay to not pass user into the context
+            # 'user': user,
+            'token': default_token_generator.make_token(user),
+            'subject': "Confirm registration",
+        }
+        send_confirmation_mail.delay(user.email, context)
+        phone = self.cleaned_data.get("phone")
+        if self.cleaned_data.get("phone"):
+            code = random.randint(10000, 99999)
+            cache.set(f"{user.id}_code", code, timeout=60*2)
+            send_sms.delay(phone, code)
+        return user
+
+
+class RegistrationPhoneConfirmForm(Form):
+    code = IntegerField()
+
+    @staticmethod
+    def save(user_id):
+        user = User.objects.get(id=user_id)
+        user.is_phone_valid = True
+        user.save(update_fields=("is_phone_valid",))

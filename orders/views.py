@@ -17,10 +17,10 @@ class OrderDetailView(CurrentOrderMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
-        context.update(
-            {"order": self.get_object(),
-             "products_relation": self.get_queryset()}
-        )
+        context.update({
+            "order": self.get_object(),
+            "products_relation": self.get_queryset()
+        })
         return context
 
     def get_queryset(self):
