@@ -8,10 +8,12 @@
         <div class="row">
             <div class="col col-lg-4 offset-lg-4 mb-3">
                 <h1>Phone confirm</h1>
+                <h2>The code has been sent to the phone number specified during registration.
+                    Enter it below to verify the validity of the phone number.</h2>
 
                 <form method="post">
                     {% include "parts/forms/simple_form.html" with form=form %}
-                    <input class="btn btn-primary mt-3" type="submit" value="Confirm">
+                    <input class="btn btn-primary mt-3" type="submit" value="Submit">
                 </form>
 
             </div>

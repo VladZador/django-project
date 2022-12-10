@@ -1,19 +1,16 @@
-import random
-
 from django.conf import settings
 from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.forms import (
     AuthenticationForm, UserCreationForm, UsernameField
 )
 from django.contrib.auth.tokens import default_token_generator
-from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.forms import CharField, TextInput, Form, IntegerField
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 
-from .tasks import send_sms, send_confirmation_mail
+from .tasks import send_confirmation_mail
 
 
 User = get_user_model()
@@ -83,17 +80,10 @@ class RegistrationForm(UserCreationForm):
             'domain': settings.DOMAIN,
             'site_name': "MyStore",
             'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            # todo: check if it's okay to not pass user into the context
-            # 'user': user,
             'token': default_token_generator.make_token(user),
             'subject': "Confirm registration",
         }
         send_confirmation_mail.delay(user.email, context)
-        phone = self.cleaned_data.get("phone")
-        if self.cleaned_data.get("phone"):
-            code = random.randint(10000, 99999)
-            cache.set(f"{user.id}_code", code, timeout=60*2)
-            send_sms.delay(phone, code)
         return user
 
 

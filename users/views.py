@@ -1,3 +1,5 @@
+from random import randint
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
@@ -11,6 +13,7 @@ from django.views.generic import FormView, RedirectView
 
 from .forms import RegistrationForm, CustomAuthenticationForm, \
     RegistrationPhoneConfirmForm
+from .tasks import send_sms
 
 User = get_user_model()
 
@@ -32,18 +35,7 @@ class RegistrationView(FormView):
     success_url = reverse_lazy("main")
 
     def form_valid(self, form):
-        # todo: change description
-        """
-        Extends the basic function by log in a newly registered user.
-        Since multiple authentication backends are configured, the specified
-        `backend` argument must be provided to the login() function.
-        """
-        user = form.save()
-        if form.cleaned_data.get("phone"):
-            self.request.session["user_id"] = str(user.id)
-            return HttpResponseRedirect(
-                reverse_lazy("registration_phone_confirm")
-            )
+        form.save()
         messages.success(self.request, "Check your email for confirmation")
         return super().form_valid(form)
 
@@ -60,8 +52,18 @@ class RegistrationConfirmView(RedirectView):
                 user.is_active = True
                 user.save(update_fields=("is_active",))
                 messages.success(request, "User activation is successful!")
+                if user.phone:
+                    code = randint(10000, 99999)
+                    cache.set(f"{user.id}_code", code, timeout=60 * 2)
+                    send_sms.delay(user.phone, code)
+                    self.request.session["user_id"] = str(user.id)
+                    return HttpResponseRedirect(
+                        reverse_lazy("registration_phone_confirm")
+                    )
             else:
-                messages.error(request, "Activation error")
+                messages.error(request, "Invalid link - activation failed")
+        else:
+            messages.error(request, "Invalid link - activation failed")
         return super().get(request, *args, **kwargs)
 
     @staticmethod
@@ -86,11 +88,7 @@ class RegistrationPhoneConfirmView(FormView):
         if cache.get(self.request.session["user_id"] + "_code") \
                 == form.cleaned_data["code"]:
             form.save(user_id)
-            messages.success(
-                self.request,
-                "Your phone number is confirmed!\n"
-                "Now check your email to complete registration!"
-            )
+            messages.success(self.request, "Your phone number is confirmed!")
             return super().form_valid(form)
         else:
             messages.error(self.request, "Code is invalid")
