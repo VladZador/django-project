@@ -19,6 +19,7 @@ from .models import Product, Category
 
 class ProductListView(ListView):
     model = Product
+    paginate_by = 15
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -91,7 +92,7 @@ class UpdateFavoriteProductsView(LoginRequiredMixin, RedirectView):
 
 class FavouriteProductsView(LoginRequiredMixin, ListView):
     model = Product
-    context_object_name = "favorite_products_list"
+    paginate_by = 15
     template_name = "products/favorite_products.html"
 
     def get_queryset(self):

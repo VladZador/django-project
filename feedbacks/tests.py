@@ -18,7 +18,7 @@ def test_feedbacks_page(client, login_user, feedback_factory, faker):
     response = client.get(url)
     assert response.status_code == 200
     assert type(response.context["form"]) == FeedbackModelForm
-    assert response.context["feedbacks"].filter(id=feedback.id).exists()
+    assert feedback in response.context["page_obj"].object_list
 
     # Post incorrect data: empty data
     assert Feedback.objects.all().count() == 1
@@ -99,11 +99,7 @@ def test_feedbacks_page(client, login_user, feedback_factory, faker):
         user=data["user"],
         rating=data["rating"]
     ).exists()
-    assert response.context["feedbacks"].filter(
-        text=data["text"],
-        user=data["user"],
-        rating=data["rating"]
-    ).exists()
+    assert len(response.context["page_obj"].object_list) == 2
 
     # Post correct data into form; symbols have to be excluded from the text
     symbols = "&%$#@"

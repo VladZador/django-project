@@ -5,36 +5,45 @@
 
 <section class="feedback">
     <div class="container">
+        <div class="row text-center">
+            <div class="col justify-content-md-center">
+                <h1>Leave your feedback!</h1>
+            </div>
+        </div>
         <div class="row">
-            <div class="col col-lg-4 offset-lg-4 mb-3">
-                <h1>Feedbacks</h1>
-
+            <div class="col col-lg-4 offset-lg-4">
                 <form method="post">
                     {% include "parts/forms/simple_form.html" with form=form %}
                     <input type="submit" value="Create Feedback" class="btn btn-primary my-2">
                 </form>
             </div>
+        </div>
 
-            <div class="d-none d-lg-block col-lg-4"></div>
-              {% for feedback in feedbacks %}
+        <div class="row">
+            <div class="row text-center">
+                <div class="col justify-content-md-center">
+                    <h1>Feedbacks</h1>
+                </div>
+            </div>
+
+              {% for feedback in page_obj %}
                  <div class="col-12 col-lg-4">
                      <div class="card my-2">
                          <div class="card-body">
                              {% if feedback.user.get_short_name %}
-                             <p>
-                                 <span>User: {{feedback.user.get_short_name }}</span>
-                             </p>
+                             <p><span>User: {{feedback.user.get_short_name }}</span></p>
+                             {% else %}
+                             <p><span>User: {{feedback.user.email }}</span></p>
                              {% endif %}
-                             <p>
-                                 <span>Text: {{feedback.text}}</span>
-                             </p>
-                             <p>
-                                 <span>Rating: {{feedback.rating}}</span>
-                             </p>
+                             <p><span>Text: {{feedback.text}}</span></p>
+                             <p><span>Rating: {{feedback.rating}}</span></p>
                          </div>
                      </div>
                  </div>
               {% endfor %}
+
+              {% include "parts/pagination.html" with page_obj=page_obj %}
+
         </div>
     </div>
 </section>

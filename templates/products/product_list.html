@@ -6,8 +6,8 @@
 <section class="products">
     <div class="container-lg p-3">
         <div class="row">
-            {% for product in object_list %}
-              <div class="col-4">
+            {% for product in page_obj %}
+              <div class="col-4 mb-2">
                 <div class="card" style="width: 18rem;">
                     {% if product.image %}
                     <a class="thumbnail p-3" href="{% url 'product_detail' product.id %}">
@@ -44,8 +44,10 @@
                 </div>
             {% endfor %}
 
+        {% include "parts/pagination.html" with page_obj=page_obj %}
+
         </div>
-        {% if object_list %}
+        {% if page_obj %}
         <div class="row">
             <div class="col p-3 d-md-flex justify-content-md-center">
                 <a href="{% url 'product_list_export_csv' %}">Export product list (csv)</a>

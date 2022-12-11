@@ -12,7 +12,7 @@ class FeedbackModelForm(forms.ModelForm):
     def __init__(self, user, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['user'].widget = forms.HiddenInput()
-        self.fields['user'].initial = user
+        self.fields['user'].initial = user.id
 
     def clean_text(self) -> str:
         """

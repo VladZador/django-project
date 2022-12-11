@@ -19,7 +19,7 @@ def test_product_list_page(client, product_factory):
     # Open "products list" page
     response = client.get(reverse("product_list"))
     assert response.status_code == 200
-    assert response.context["product_list"].filter(id=product.id).exists()
+    assert product in response.context["page_obj"].object_list
 
 
 def test_product_detail_page(client, faker, product_factory):
@@ -238,13 +238,13 @@ def test_favorite_products_page_as_user(login_user, product_factory):
     # Open favorite products page when there's no favorite products for current user
     response = client.get(url)
     assert response.status_code == 200
-    assert not response.context["favorite_products_list"]
+    assert not response.context["page_obj"]
 
     # Open favorite products page
     user.favorite_products.add(product)
     response = client.get(url)
     assert response.status_code == 200
-    assert response.context["favorite_products_list"].filter(id=product.id).exists()
+    assert product in response.context["page_obj"].object_list
 
 
 def test_product_list_export_csv_page_as_user(login_user, product_factory):
