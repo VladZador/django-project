@@ -13,17 +13,38 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, RedirectView
 
 from orders.models import Order
-from .forms import AddToCartForm, UpdateFavoriteProductsForm, CsvImportForm
+from .forms import AddToCartForm, UpdateFavoriteProductsForm, CsvImportForm, \
+    ProductFilterForm
 from .models import Product, Category
 
 
 class ProductListView(ListView):
     model = Product
+    paginate_by = 20
+    filter_form = ProductFilterForm
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        qs = qs.prefetch_related("user_set__favorite_products")
+        qs = super().get_queryset().prefetch_related(
+            "user_set__favorite_products"
+        )
+        qs = self.filter_queryset(qs)
         return qs
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(object_list=None, **kwargs)
+        context.update(
+            {"filter_form": self.filter_form}
+        )
+        return context
+
+    def filter_queryset(self, queryset):
+        category_name = self.request.GET.get("category")
+        name = self.request.GET.get("name")
+        if category_name:
+            queryset = queryset.filter(category__name=category_name)
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+        return queryset
 
 
 class ProductDetailView(DetailView):
@@ -91,7 +112,7 @@ class UpdateFavoriteProductsView(LoginRequiredMixin, RedirectView):
 
 class FavouriteProductsView(LoginRequiredMixin, ListView):
     model = Product
-    context_object_name = "favorite_products_list"
+    paginate_by = 15
     template_name = "products/favorite_products.html"
 
     def get_queryset(self):

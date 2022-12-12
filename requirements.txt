@@ -18,3 +18,4 @@ pytest-mock==3.10.0
 coverage==6.5.0
 pytest-factoryboy==2.5.0
 beautifulsoup4==4.11.1
+django-widget-tweaks==1.4.12

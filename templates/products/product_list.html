@@ -5,9 +5,26 @@
 
 <section class="products">
     <div class="container-lg p-3">
+
+        <div class="col text-center my-3">
+                {% if request.GET %}
+                <h4>Search results for {% for k, v in request.GET.items %} {% if v %} {{ k }}: "{{ v }}" {% endif %}{% endfor %}</h4>
+                {% else %}
+                <h1>Our products</h1>
+                {% endif %}
+        </div>
+
         <div class="row">
-            {% for product in object_list %}
-              <div class="col-4">
+            <div class="col-4 mb-2">
+                <h4>Filter products</h4>
+                <form>
+                    {% include "parts/forms/simple_form.html" with form=filter_form %}
+                    <button class="btn btn-primary my-2" type="submit">Filter</button>
+                </form>
+            </div>
+
+            {% for product in page_obj %}
+              <div class="col-4 mb-2">
                 <div class="card" style="width: 18rem;">
                     {% if product.image %}
                     <a class="thumbnail p-3" href="{% url 'product_detail' product.id %}">
@@ -40,12 +57,14 @@
               </div>
                 {% empty %}
                 <div>
-                    <h3>Sorry, the product list is currently empty</h3>
+                    <h3>Sorry, the product list is empty</h3>
                 </div>
             {% endfor %}
 
+        {% include "parts/pagination.html" with page_obj=page_obj %}
+
         </div>
-        {% if object_list %}
+        {% if page_obj %}
         <div class="row">
             <div class="col p-3 d-md-flex justify-content-md-center">
                 <a href="{% url 'product_list_export_csv' %}">Export product list (csv)</a>

@@ -2,7 +2,7 @@ from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from orders.models import Order
-from .forms import CsvImportForm
+from .forms import CsvImportForm, ProductFilterForm
 from .models import Product, Category
 
 
@@ -19,7 +19,35 @@ def test_product_list_page(client, product_factory):
     # Open "products list" page
     response = client.get(reverse("product_list"))
     assert response.status_code == 200
-    assert response.context["product_list"].filter(id=product.id).exists()
+    assert product in response.context["page_obj"].object_list
+    assert type(response.context["form"]) == ProductFilterForm
+
+
+def test_products_filtering(client, product_factory, faker):
+    product1 = product_factory()
+    product2 = product_factory()
+
+    # Filtering by gibberish data
+    response = client.get(
+        reverse("product_list") + "?category=" + faker.word() +
+        "?name=" + faker.word()
+    )
+    assert response.status_code == 200
+    assert not any(response.context["object_list"].values()[i]["id"] == product1.id
+                   for i in range(len(response.context["object_list"].values())))
+    assert not any(response.context["object_list"].values()[i]["id"] == product2.id
+                   for i in range(len(response.context["object_list"].values())))
+
+    # Filtering by one of the products
+    response = client.get(
+        reverse("product_list") + "?category=" + product1.category.name +
+        "&name=" + product1.name
+    )
+    assert response.status_code == 200
+    assert any(response.context["object_list"].values()[i]["id"] == product1.id
+               for i in range(len(response.context["object_list"].values())))
+    assert not any(response.context["object_list"].values()[i]["id"] == product2.id
+                   for i in range(len(response.context["object_list"].values())))
 
 
 def test_product_detail_page(client, faker, product_factory):
@@ -238,13 +266,13 @@ def test_favorite_products_page_as_user(login_user, product_factory):
     # Open favorite products page when there's no favorite products for current user
     response = client.get(url)
     assert response.status_code == 200
-    assert not response.context["favorite_products_list"]
+    assert not response.context["page_obj"]
 
     # Open favorite products page
     user.favorite_products.add(product)
     response = client.get(url)
     assert response.status_code == 200
-    assert response.context["favorite_products_list"].filter(id=product.id).exists()
+    assert product in response.context["page_obj"].object_list
 
 
 def test_product_list_export_csv_page_as_user(login_user, product_factory):

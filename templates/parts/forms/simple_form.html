@@ -1,11 +1,18 @@
-{% csrf_token %}
+{% load widget_tweaks %}
+
 {% for field in form %}
     <label>{{ field.label }}</label>
+
+    {% if field|widget_type == "select" %}
+        {{ field|add_class:'form-select' }}
+
+    {% else %}
     <input type="{{ field.field.widget.input_type }}"
         name="{{ field.name }}"
         id="{{ field.auto_id }}"
         value="{% if field.initial %}{{ field.initial }}{% endif %}"
         class="form-control">
+    {% endif %}
 
     {% if field.help_text %}
         <div class="form-text">

@@ -10,6 +10,7 @@
                 <h1>Registration</h1>
 
                 <form method="post">
+                    {% csrf_token %}
                     {% include "parts/forms/simple_form.html" with form=form %}
                     <input class="btn btn-primary mt-3" type="submit" value="Sign up">
                 </form>

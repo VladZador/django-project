@@ -12,6 +12,7 @@
                     Enter it below to verify the validity of the phone number.</h2>
 
                 <form method="post">
+                    {% csrf_token %}
                     {% include "parts/forms/simple_form.html" with form=form %}
                     <input class="btn btn-primary mt-3" type="submit" value="Submit">
                 </form>
