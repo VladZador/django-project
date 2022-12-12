@@ -2,7 +2,7 @@ from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from orders.models import Order
-from .forms import CsvImportForm
+from .forms import CsvImportForm, ProductFilterForm
 from .models import Product, Category
 
 
@@ -20,6 +20,34 @@ def test_product_list_page(client, product_factory):
     response = client.get(reverse("product_list"))
     assert response.status_code == 200
     assert product in response.context["page_obj"].object_list
+    assert type(response.context["form"]) == ProductFilterForm
+
+
+def test_products_filtering(client, product_factory, faker):
+    product1 = product_factory()
+    product2 = product_factory()
+
+    # Filtering by gibberish data
+    response = client.get(
+        reverse("product_list") + "?category=" + faker.word() +
+        "?name=" + faker.word()
+    )
+    assert response.status_code == 200
+    assert not any(response.context["object_list"].values()[i]["id"] == product1.id
+                   for i in range(len(response.context["object_list"].values())))
+    assert not any(response.context["object_list"].values()[i]["id"] == product2.id
+                   for i in range(len(response.context["object_list"].values())))
+
+    # Filtering by one of the products
+    response = client.get(
+        reverse("product_list") + "?category=" + product1.category.name +
+        "&name=" + product1.name
+    )
+    assert response.status_code == 200
+    assert any(response.context["object_list"].values()[i]["id"] == product1.id
+               for i in range(len(response.context["object_list"].values())))
+    assert not any(response.context["object_list"].values()[i]["id"] == product2.id
+                   for i in range(len(response.context["object_list"].values())))
 
 
 def test_product_detail_page(client, faker, product_factory):

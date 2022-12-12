@@ -1,5 +1,4 @@
-from django.forms import Form, FileField, UUIDField, ChoiceField, CharField, \
-    ModelChoiceField
+from django.forms import Form, FileField, UUIDField, ChoiceField, CharField
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
@@ -10,14 +9,13 @@ class CsvImportForm(Form):
     csv_import = FileField()
 
 
-category_choices = [("", "Select")]
-for x in Category.objects.all().values_list("name", flat=True):
-    category_choices.append((x, x))
-
-
 class ProductFilterForm(Form):
+    _category_choices = [("", "Select")]
+    for x in Category.objects.all().values_list("name", flat=True):
+        _category_choices.append((x, x))
+
     category = ChoiceField(
-        choices=category_choices,
+        choices=_category_choices,
         required=False)
     name = CharField(max_length=32, required=False)
 
