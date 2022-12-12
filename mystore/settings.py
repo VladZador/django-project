@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_celery_results",
     "django_celery_beat",
+    "widget_tweaks",
     # 'silk',
     # "debug_toolbar",
 ]

@@ -13,6 +13,7 @@
         <div class="row">
             <div class="col col-lg-4 offset-lg-4">
                 <form method="post">
+                    {% csrf_token %}
                     {% include "parts/forms/simple_form.html" with form=form %}
                     <input type="submit" value="Create Feedback" class="btn btn-primary my-2">
                 </form>

@@ -10,6 +10,7 @@
 
                     <p>
                         <form method="post">
+                            {% csrf_token %}
                             {% include "parts/forms/simple_form.html" with form=form %}
                             <input type="submit" value="Send" class="btn btn-primary my-3">
                         </form>
