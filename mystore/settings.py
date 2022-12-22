@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "widget_tweaks",
     'rest_framework',
+    'drf_yasg',
     # 'silk',
     # "debug_toolbar",
 ]

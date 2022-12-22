@@ -8,6 +8,7 @@ from feedbacks.models import Feedback
 
 
 class UserDetailSerializer(ModelSerializer):
+    """Serializer for displaying user info in the feedbacks API."""
     class Meta:
         model = get_user_model()
         fields = ("first_name", "last_name", "email")
@@ -22,15 +23,14 @@ class FeedbackSerializer(ModelSerializer):
             "text", "user", "rating", "created_at",
         )
 
-    # todo: check this regex
     @staticmethod
     def validate_text(value):
+        """Validates the text for urls."""
         if re.search(
-                "(http(s)?://.)?(www.)?[-a-zA-Z0-9@:%._+~#=]{2,256}.[a-z]{2,6}"
-                "\b([-a-zA-Z0-9@:%_+.~#?&/=]*)",
+                r"([\w+]+://)?([\w-]+\.)*[\w-]+[.:]\w+([/?=&#.]?[\w-]+)*/?",
                 value
         ):
-            raise ValidationError("The text field must not contain urls")
+            raise ValidationError("The text field must not contain urls.")
         return value
 
     def create(self, validated_data):
