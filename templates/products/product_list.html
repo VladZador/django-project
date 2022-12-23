@@ -7,8 +7,8 @@
     <div class="container-lg p-3">
 
         <div class="col text-center my-3">
-                {% if request.GET %}
-                <h4>Search results for {% for k, v in request.GET.items %} {% if v %} {{ k }}: "{{ v }}" {% endif %}{% endfor %}</h4>
+                {% if search_data %}
+                <h4>Search results for {% for k, v in search_data.items %} {{ k }} "{{ v }}", {% endfor %}</h4>
                 {% else %}
                 <h1>Our products</h1>
                 {% endif %}
@@ -18,7 +18,7 @@
             <div class="col-4 mb-2">
                 <h4>Filter products</h4>
                 <form>
-                    {% include "parts/forms/simple_form.html" with form=filter_form %}
+                    {% include "parts/forms/simple_form.html" with form=filter.form %}
                     <button class="btn btn-primary my-2" type="submit">Filter</button>
                 </form>
             </div>

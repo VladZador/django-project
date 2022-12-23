@@ -9,6 +9,8 @@ class CsvImportForm(Form):
     csv_import = FileField()
 
 
+# Was used to filter products in ListView before we applied
+# django-filter package
 class ProductFilterForm(Form):
     _category_choices = [("", "Select")]
     for x in Category.objects.all().values_list("name", flat=True):
