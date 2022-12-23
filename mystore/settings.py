@@ -63,6 +63,9 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "widget_tweaks",
     'rest_framework',
+    'rest_framework.authtoken',
+    'django_filters',
+    'drf_yasg',
     # 'silk',
     # "debug_toolbar",
 ]
@@ -192,3 +195,12 @@ ADMINS = [("Vlad", ADMIN_EMAIL)]
 MANAGERS = ADMINS
 EMAIL_SUBJECT_PREFIX = "MyStore - "
 SERVER_EMAIL = EMAIL_HOST_USER
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'api.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
+}

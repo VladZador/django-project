@@ -11,40 +11,54 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, RedirectView
+from django_filters.views import FilterView
 
 from orders.models import Order
-from .forms import AddToCartForm, UpdateFavoriteProductsForm, CsvImportForm, \
-    ProductFilterForm
+from .filters import ProductFilter
+from .forms import AddToCartForm, UpdateFavoriteProductsForm, CsvImportForm
 from .models import Product, Category
 
 
-class ProductListView(ListView):
+class ProductListView(FilterView):
     model = Product
     paginate_by = 20
-    filter_form = ProductFilterForm
+    filterset_class = ProductFilter
+    template_name_suffix = "_list"
 
     def get_queryset(self):
-        qs = super().get_queryset().prefetch_related(
+        return super().get_queryset().prefetch_related(
             "user_set__favorite_products"
         )
-        qs = self.filter_queryset(qs)
-        return qs
 
     def get_context_data(self, *, object_list=None, **kwargs):
+        """
+        Is used to add search data put in request.GET as query
+        params to the context. This search data can be used in the template
+        later on.
+        """
         context = super().get_context_data(object_list=None, **kwargs)
+        search_data = {}
+        for k, v in self.request.GET.items():
+            if v:
+                if k == "name__icontains":
+                    search_data.update({"name": v})
+                elif k == "category":
+                    try:
+                        search_data.update(
+                            {"category": Category.objects.get(id=v).name}
+                        )
+                    except Category.DoesNotExist:
+                        pass
+                elif k == "price__gt":
+                    search_data.update({"price is greater than": v})
+                elif k == "price__lt":
+                    search_data.update({"price is less than": v})
+                else:
+                    search_data.update({k: v})
         context.update(
-            {"filter_form": self.filter_form}
+            {"search_data": search_data}
         )
         return context
-
-    def filter_queryset(self, queryset):
-        category_name = self.request.GET.get("category")
-        name = self.request.GET.get("name")
-        if category_name:
-            queryset = queryset.filter(category__name=category_name)
-        if name:
-            queryset = queryset.filter(name__icontains=name)
-        return queryset
 
 
 class ProductDetailView(DetailView):
