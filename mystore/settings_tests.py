@@ -9,3 +9,5 @@ REMOVE_MIDDLEWARE = [
 #     MIDDLEWARE.remove(i)
 
 CELERY_TASK_ALWAYS_EAGER = True
+
+# todo: add email backend
