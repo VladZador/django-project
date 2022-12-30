@@ -1,4 +1,4 @@
-function update_favourite(element){
+function update_favorite(element){
     let productID = element.data("product"),
         star = element.find("img.star"),
         noStar = element.find("img.no-star");
@@ -9,11 +9,6 @@ function update_favourite(element){
             action = "remove"
         }
 
-        func_data = {
-            "product": productID,
-            "action": action
-        }
-
     $(function () {
         $.ajaxSetup({
             headers: { "X-CSRFToken": getCookie("csrftoken") }
@@ -21,7 +16,10 @@ function update_favourite(element){
     });
     $.post(
         `/products/ajax-${action}-favorite/`,
-        data=func_data,
+        {
+            "product": productID,
+            "action": action
+        },
         function (data) {
             if (data.form_valid == true) {
                 if (data.action == "add") {
