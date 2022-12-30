@@ -7,12 +7,15 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.generic import ListView, DetailView, RedirectView
 from django_filters.views import FilterView
 
+from mystore.decorators import ajax_required
 from orders.models import Order
 from .filters import ProductFilter
 from .forms import AddToCartForm, UpdateFavoriteProductsForm, CsvImportForm
@@ -90,14 +93,15 @@ class AddToCartView(LoginRequiredMixin, RedirectView):
 class UpdateFavoriteProductsView(LoginRequiredMixin, RedirectView):
 
     def post(self, request, *args, **kwargs):
+        action = kwargs["action"]
         form = UpdateFavoriteProductsForm(
             request.POST,
             user=request.user,
-            action=kwargs["action"]
+            action=action
         )
         if form.is_valid():
-            form.save(kwargs["action"])
-            if kwargs["action"] == "add":
+            form.save(action)
+            if action == "add":
                 messages.info(
                     self.request,
                     "Product is added to your favorite products list!",
@@ -122,6 +126,23 @@ class UpdateFavoriteProductsView(LoginRequiredMixin, RedirectView):
         return self.request.headers.get(
             "Referer", reverse_lazy("favorite_products")
         )
+
+
+@method_decorator(ajax_required, name='dispatch')
+class AJAXUpdateFavoriteProductsView(LoginRequiredMixin, View):
+
+    @staticmethod
+    def post(request, valid=False, *args, **kwargs):
+        action = kwargs["action"]
+        form = UpdateFavoriteProductsForm(
+            request.POST,
+            user=request.user,
+            action=action
+        )
+        if form.is_valid():
+            form.save(action)
+            valid = form.is_valid()
+        return JsonResponse(data={"form_valid": valid, "action": action})
 
 
 class FavouriteProductsView(LoginRequiredMixin, ListView):

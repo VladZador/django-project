@@ -2,7 +2,8 @@ from django.urls import path, re_path
 
 from .views import (
     ProductListView, ProductDetailView, export_csv, export_csv_detail,
-    AddToCartView, UpdateFavoriteProductsView, FavouriteProductsView
+    AddToCartView, UpdateFavoriteProductsView, FavouriteProductsView,
+    AJAXUpdateFavoriteProductsView
 )
 
 urlpatterns = [
@@ -23,6 +24,11 @@ urlpatterns = [
         "products/(?P<action>add|remove)-favorite/",
         UpdateFavoriteProductsView.as_view(),
         name="update_favorite_products"
+    ),
+    re_path(
+        "products/ajax-(?P<action>add|remove)-favorite/",
+        AJAXUpdateFavoriteProductsView.as_view(),
+        name="ajax_update_favorite_products"
     ),
     path(
         "products/favorite/",
