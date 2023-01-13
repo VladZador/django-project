@@ -1,0 +1,21 @@
+# local
+settings_local.py
+
+# project media
+static/
+media/
+
+# environments
+venv/
+.idea/
+
+# test / coverage reports
+.pytest_cache/
+htmlcov/
+.coverage
+
+# SQLite database
+db.sqlite3
+
+# redis binary dump
+*.rdb

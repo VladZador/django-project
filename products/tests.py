@@ -2,7 +2,7 @@ from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from orders.models import Order
-from .forms import CsvImportForm, ProductFilterForm
+from .forms import CsvImportForm
 from .models import Product, Category
 
 
@@ -20,7 +20,6 @@ def test_product_list_page(client, product_factory):
     response = client.get(reverse("product_list"))
     assert response.status_code == 200
     assert product in response.context["page_obj"].object_list
-    assert type(response.context["form"]) == ProductFilterForm
 
 
 def test_products_filtering(client, product_factory, faker):

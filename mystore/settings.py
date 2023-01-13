@@ -123,16 +123,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',  # noqa
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',  # noqa E501
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',  # noqa
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',  # noqa E501
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',  # noqa
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',  # noqa E501
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',  # noqa
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',  # noqa E501
     },
 ]
 
@@ -173,12 +173,12 @@ LOGIN_URL = reverse_lazy('login')
 
 
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
-CELERY_RESULT_BACKEND = "django_celery_results.backends.database.DatabaseBackend"  # noqa
+CELERY_RESULT_BACKEND = "django_celery_results.backends.database.DatabaseBackend"  # noqa E501
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': env("CACHE_LOCATION"),
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': env('MEMCACHE_LOCATION'),
     }
 }
 
@@ -208,3 +208,8 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
 }
+
+try:
+    from mystore.settings_local import *  # noqa F401, F403
+except ImportError:
+    print("Not allowed")
