@@ -54,10 +54,8 @@ class ProductListView(FilterView):
                         pass
                 elif k == "price__gt":
                     search_data.update({"price is greater than": v})
-                elif k == "price__lt":
-                    search_data.update({"price is less than": v})
                 else:
-                    search_data.update({k: v})
+                    search_data.update({"price is less than": v})
         context.update(
             {"search_data": search_data}
         )
