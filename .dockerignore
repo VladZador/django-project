@@ -1,5 +1,5 @@
 # local
-settings_local.py
+mystore/settings_local.py
 
 # project media
 static/
