@@ -36,3 +36,9 @@ class FeedbackSerializer(ModelSerializer):
     def create(self, validated_data):
         validated_data.update({"user": self.context["request"].user})
         return super().create(validated_data)
+
+# todo: Add serializers for other apps
+
+# todo: reinstall docker
+
+# todo: fill the readme file

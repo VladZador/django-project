@@ -2,7 +2,7 @@ from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from orders.models import Order
-from .forms import CsvImportForm, ProductFilterForm
+from .forms import CsvImportForm
 from .models import Product, Category
 
 
@@ -20,7 +20,6 @@ def test_product_list_page(client, product_factory):
     response = client.get(reverse("product_list"))
     assert response.status_code == 200
     assert product in response.context["page_obj"].object_list
-    assert type(response.context["form"]) == ProductFilterForm
 
 
 def test_products_filtering(client, product_factory, faker):
@@ -28,11 +27,14 @@ def test_products_filtering(client, product_factory, faker):
     product2 = product_factory()
 
     # Filtering by gibberish data
+    name = faker.word()
     response = client.get(
-        reverse("product_list") + "?category=" + faker.word() +
-        "?name=" + faker.word()
+        reverse("product_list") + "?name__icontains=" + name
+        + "?category=" + faker.uuid4()
     )
     assert response.status_code == 200
+    assert response.context['search_data'].get('name')
+    assert not response.context['search_data'].get('category')
     assert not any(response.context["object_list"].values()[i]["id"] == product1.id
                    for i in range(len(response.context["object_list"].values())))
     assert not any(response.context["object_list"].values()[i]["id"] == product2.id
@@ -40,10 +42,15 @@ def test_products_filtering(client, product_factory, faker):
 
     # Filtering by one of the products
     response = client.get(
-        reverse("product_list") + "?category=" + product1.category.name +
-        "&name=" + product1.name
+        reverse("product_list") +
+        "?category=" + str(product1.category.id) +
+        "&name__icontains=" + product1.name +
+        "&price__gt=" + str(float(product1.price) - 1) +
+        "&price__lt=" + str(float(product1.price) + 1)
     )
     assert response.status_code == 200
+    assert response.context['search_data'].get('price is greater than')
+    assert response.context['search_data'].get('price is less than')
     assert any(response.context["object_list"].values()[i]["id"] == product1.id
                for i in range(len(response.context["object_list"].values())))
     assert not any(response.context["object_list"].values()[i]["id"] == product2.id

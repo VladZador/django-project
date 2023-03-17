@@ -10,4 +10,4 @@ REMOVE_MIDDLEWARE = [
 
 CELERY_TASK_ALWAYS_EAGER = True
 
-# todo: add email backend
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
